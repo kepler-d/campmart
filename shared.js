@@ -236,22 +236,85 @@ export function syncHeaderAndNavigation() {
     if (profile.avatar) img.src = profile.avatar;
   });
 
+  // 2b. Sync Brand Logos to click to dashboard (marketplace.html)
+  const brandLogos = document.querySelectorAll("header .font-headline-md, header h1, nav .font-headline-md, header span.font-headline-md");
+  brandLogos.forEach(logo => {
+    if (logo.textContent.trim().toLowerCase().includes("campusmarket")) {
+      logo.style.cursor = "pointer";
+      logo.onclick = () => { window.location.href = "marketplace.html"; };
+    }
+  });
+
   // 3. Fix nav links to direct correctly
+  const path = window.location.pathname;
+  const isDashboardPage = path.endsWith("dashboard.html");
+  const isMarketplacePage = path.endsWith("marketplace.html") || path.endsWith("/") || (path.endsWith("index.html") === false && path.includes(".") === false && !isDashboardPage);
+
   const navLinks = document.querySelectorAll("nav a, header a");
   navLinks.forEach(link => {
-    const text = link.innerText.trim().toLowerCase();
+    const text = link.textContent.trim().toLowerCase();
+    const icon = link.querySelector(".material-symbols-outlined");
+
+    const makeActive = (el) => {
+      el.classList.add("bg-primary-container/20", "text-primary", "border-l-4", "border-primary", "font-bold");
+      el.classList.remove("text-on-surface-variant");
+      if (icon) {
+        icon.classList.add("icon-fill", "text-primary");
+        icon.classList.remove("text-outline");
+      }
+    };
+
+    const makeInactive = (el) => {
+      el.classList.remove("bg-primary-container/20", "text-primary", "border-l-4", "border-primary", "font-bold");
+      el.classList.add("text-on-surface-variant");
+      if (icon) {
+        icon.classList.remove("icon-fill", "text-primary");
+        icon.classList.add("text-outline");
+      }
+    };
+
     if (text.includes("dashboard") || text.includes("overview")) {
-      link.href = "marketplace.html"; // We route Dashboard tab to marketplace dashboard
+      link.href = "dashboard.html";
+      if (isDashboardPage) {
+        makeActive(link);
+      } else {
+        makeInactive(link);
+      }
     } else if (text.includes("marketplace") || text.includes("explore")) {
       link.href = "marketplace.html";
+      if (isMarketplacePage) {
+        makeActive(link);
+      } else {
+        makeInactive(link);
+      }
     } else if (text.includes("messages")) {
       link.href = "messages.html";
+      if (path.endsWith("messages.html")) {
+        makeActive(link);
+      } else {
+        makeInactive(link);
+      }
     } else if (text.includes("leaderboard")) {
       link.href = "leaderboard.html";
+      if (path.endsWith("leaderboard.html")) {
+        makeActive(link);
+      } else {
+        makeInactive(link);
+      }
     } else if (text.includes("admin")) {
       link.href = "admin.html";
+      if (path.endsWith("admin.html")) {
+        makeActive(link);
+      } else {
+        makeInactive(link);
+      }
     } else if (text.includes("profile")) {
       link.href = "profile.html";
+      if (path.endsWith("profile.html")) {
+        makeActive(link);
+      } else {
+        makeInactive(link);
+      }
     } else if (text.includes("sign out") || text.includes("logout")) {
       link.href = "index.html";
     }
