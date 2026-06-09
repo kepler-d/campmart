@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Product Details - CampusMarket</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "secondary-fixed-dim": "#4edea3",
+                        "inverse-surface": "#2a313d",
+                        "on-primary-container": "#dad7ff",
+                        "on-primary": "#ffffff",
+                        "primary-fixed-dim": "#c3c0ff",
+                        "inverse-on-surface": "#ebf1ff",
+                        "secondary-fixed": "#6ffbbe",
+                        "outline-variant": "#c7c4d8",
+                        "on-tertiary": "#ffffff",
+                        "secondary": "#006c49",
+                        "on-error-container": "#93000a",
+                        "surface-dim": "#d3daea",
+                        "background": "#f9f9ff",
+                        "surface-container-high": "#e2e8f8",
+                        "surface-tint": "#4d44e3",
+                        "on-secondary-container": "#00714d",
+                        "tertiary-container": "#a04500",
+                        "on-secondary-fixed-variant": "#005236",
+                        "surface": "#f9f9ff",
+                        "primary-container": "#4f46e5",
+                        "on-surface-variant": "#464555",
+                        "secondary-container": "#6cf8bb",
+                        "on-surface": "#151c27",
+                        "tertiary": "#7b3300",
+                        "surface-variant": "#dce2f3",
+                        "on-secondary-fixed": "#002113",
+                        "on-error": "#ffffff",
+                        "on-tertiary-fixed": "#341100",
+                        "on-tertiary-container": "#ffd2bd",
+                        "surface-container-low": "#f0f3ff",
+                        "error": "#ba1a1a",
+                        "surface-container-highest": "#dce2f3",
+                        "on-secondary": "#ffffff",
+                        "outline": "#777587",
+                        "surface-container-lowest": "#ffffff",
+                        "tertiary-fixed": "#ffdbca",
+                        "on-tertiary-fixed-variant": "#783200",
+                        "error-container": "#ffdad6",
+                        "surface-container": "#e7eefe",
+                        "surface-bright": "#f9f9ff",
+                        "on-primary-fixed-variant": "#3323cc",
+                        "inverse-primary": "#c3c0ff",
+                        "on-background": "#151c27",
+                        "tertiary-fixed-dim": "#ffb690",
+                        "on-primary-fixed": "#0f0069",
+                        "primary": "#3525cd",
+                        "primary-fixed": "#e2dfff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "margin-desktop": "48px",
+                        "gutter": "24px",
+                        "xs": "4px",
+                        "max-width": "1280px",
+                        "md": "16px",
+                        "base": "4px",
+                        "lg": "24px",
+                        "xl": "32px",
+                        "sm": "8px",
+                        "margin-mobile": "16px"
+                    },
+                    "fontFamily": {
+                        "headline-md": ["Inter"],
+                        "headline-lg-mobile": ["Inter"],
+                        "display": ["Inter"],
+                        "label-sm": ["Inter"],
+                        "label-md": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "body-md": ["Inter"],
+                        "body-lg": ["Inter"]
+                    },
+                    "fontSize": {
+                        "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                        "headline-lg-mobile": ["24px", {"lineHeight": "32px", "fontWeight": "700"}],
+                        "display": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "800"}],
+                        "label-sm": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                        "label-md": ["14px", {"lineHeight": "20px", "fontWeight": "500"}],
+                        "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "700"}],
+                        "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body {
+            background-color: theme('colors.background');
+            color: theme('colors.on-background');
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .material-symbols-outlined.fill {
+            font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        
+        /* Hide scrollbar for horizontal scrolling containers */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;  /* IE and Edge */
+            scrollbar-width: none;  /* Firefox */
+        }
+    </style>
+    <script type="module" src="./shared.js"></script>
+</head>
+<body class="antialiased min-h-screen flex flex-col pt-20"> <!-- Added pt-20 to offset fixed TopNavBar -->
+<!-- TopNavBar (Shared Component) -->
+<header class="bg-surface/80 dark:bg-inverse-surface/80 backdrop-blur-xl font-headline-md text-headline-md. Body: font-body-md text-body-md. fixed top-0 w-full z-50 border-b border-outline-variant/30 dark:border-outline/20 shadow-sm dark:shadow-none">
+<div class="flex justify-between items-center w-full px-margin-mobile md:px-margin-desktop py-4 max-w-max-width mx-auto">
+<!-- Left: Logo & Search -->
+<div class="flex items-center gap-lg flex-1">
+<a class="font-headline-md text-headline-md font-extrabold text-primary dark:text-primary-fixed-dim hover:bg-surface-container-low dark:hover:bg-inverse-surface/50 transition-colors rounded-lg px-2 py-1" href="#">CampusMarket</a>
+<div class="hidden md:flex items-center bg-surface-container-lowest border border-outline-variant rounded-full px-4 py-2 w-full max-w-md shadow-sm">
+<span class="material-symbols-outlined text-outline">search</span>
+<input class="bg-transparent border-none focus:ring-0 text-body-md font-body-md w-full ml-2 text-on-surface placeholder:text-outline" placeholder="Search marketplace..." type="text"/>
+</div>
+</div>
+<!-- Middle: Navigation Links (Desktop) -->
+<nav class="hidden md:flex items-center gap-lg mx-lg">
+<a class="text-on-surface-variant dark:text-outline-variant hover:text-primary dark:hover:text-primary-fixed-dim font-body-md text-body-md" href="#">Explore</a>
+<a class="text-primary dark:text-primary-fixed-dim font-bold border-b-2 border-primary dark:border-primary-fixed-dim pb-1 font-body-md text-body-md" href="#">Marketplace</a> <!-- Assuming Marketplace context -->
+<a class="text-on-surface-variant dark:text-outline-variant hover:text-primary dark:hover:text-primary-fixed-dim font-body-md text-body-md" href="#">My Items</a>
+</nav>
+<!-- Right: Actions & Profile -->
+<div class="flex items-center gap-md">
+<button class="text-on-surface-variant hover:bg-surface-container-low dark:hover:bg-inverse-surface/50 transition-colors p-2 rounded-full hidden md:block">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="text-on-surface-variant hover:bg-surface-container-low dark:hover:bg-inverse-surface/50 transition-colors p-2 rounded-full hidden md:block">
+<span class="material-symbols-outlined">favorite</span>
+</button>
+<button class="bg-primary text-on-primary hover:bg-primary/90 font-label-md text-label-md px-4 py-2 rounded-full transition-colors hidden md:block">
+                    List Item
+                </button>
+<!-- Mobile Search Toggle -->
+<button class="md:hidden text-on-surface-variant p-2">
+<span class="material-symbols-outlined">search</span>
+</button>
+<!-- Profile Avatar -->
+<button class="w-10 h-10 rounded-full bg-surface-container-high border border-outline-variant overflow-hidden ml-2">
+<img alt="User avatar" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDZs4carVhvdvND7XH4IqVUhya94GDYGFjKjF6KZSTSjt3R-kI4yKZERr6Kh2JnFimN1xxYQmaUsaEvhq4BbotUo5md2mGcCJZ1wuhjuF7vKjywPItJn74m-AmiCIH8BdqgKlb1mdgetpqrRT40HzrTb_D6OLmVKlCeabbWa1wlQpU43xS1Gmg_EqXOIWfsJlOBo-bXflPWjsRA4oUxDK7avmns08ePf_tV4wu1A8NtwBjca_GP3XCCq8Ckk3UZ9tU4vn7DFC9iHiQ6"/>
+</button>
+</div>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="flex-1 w-full max-w-max-width mx-auto px-margin-mobile md:px-margin-desktop py-xl">
+<!-- Breadcrumbs -->
+<nav aria-label="Breadcrumb" class="flex items-center text-label-md font-label-md text-on-surface-variant mb-lg">
+<a class="hover:text-primary transition-colors" href="#">Home</a>
+<span class="material-symbols-outlined text-sm mx-1">chevron_right</span>
+<a class="hover:text-primary transition-colors" href="#">Electronics</a>
+<span class="material-symbols-outlined text-sm mx-1">chevron_right</span>
+<span class="text-on-surface">Laptops</span>
+</nav>
+<!-- Product Details Bento Grid Layout -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-gutter mb-xl">
+<!-- Left Column: Image Gallery (Span 7) -->
+<div class="lg:col-span-7 flex flex-col gap-md">
+<!-- Main Image -->
+<div class="bg-surface-container-lowest rounded-xl border border-outline-variant/30 overflow-hidden relative aspect-[4/3] w-full">
+<img id="product-image" alt="Product Image" class="w-full h-full object-cover" src=""/>
+<!-- Badges -->
+<div id="product-badge-container" class="absolute top-4 left-4 flex gap-2">
+<span class="bg-surface/90 backdrop-blur-md text-on-surface font-label-sm text-label-sm px-3 py-1 rounded-full border border-outline-variant/20 shadow-sm">Like New</span>
+<span class="bg-secondary/10 text-secondary font-label-sm text-label-sm px-3 py-1 rounded-full border border-secondary/20 shadow-sm">Verified</span>
+</div>
+</div>
+<!-- Thumbnails -->
+<div class="flex gap-4 overflow-x-auto no-scrollbar pb-2">
+<button class="flex-shrink-0 w-24 h-24 rounded-lg border-2 border-primary overflow-hidden">
+<img alt="Thumbnail 1" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAlp_84RaDvqJy13WIlN4c6VwuNey6KHZBlavUqEAaYa-qWEhO80uBfkPduKeoSty1c5VnNQMiQsimsMrNDksiOYOZMgHJXLNWUhpSJcU87VpC-KAOYzqpZmVHHVDIg04W5hn4N7QTD4VDNUN8DT7m7EF1i0MqY606gFX-cPTosiiNY083R2jD0F6tjd4jb8ZbmhtzYcoEcrp8nBu55zos8zkrdYiNoLZG_KKiRzCqqEt1BWhHTnTsKa8mjXD843T7NpaSeP3XrU5nO"/>
+</button>
+<button class="flex-shrink-0 w-24 h-24 rounded-lg border border-outline-variant/50 overflow-hidden opacity-70 hover:opacity-100 transition-opacity">
+<img alt="Thumbnail 2" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC2IPZPCr--mMaeYz1Z3NXC3GsSOvDQk5dj_zBDC9nRxukDNsCdLANHQQzk6XA8fUYUnEYVo1Ed-_6DxFzqqpKuIZ1tCTjRi85m0fV8WII5HKpLJ4hhA1ZZQwo_7LSLMeHcOm2-8dHSwhCjkHEKmKwSaoOjm6DWKs6wpydFRieJOEIssy46actnE_cLLEqGZysEAlIo1fGU1-QtLIuLCA3Jb1BUk2S4ZGlfYyjPsNC4PZ0tBeeoR6tuo_ataLKBdHTMPIM39D4bhZnK"/>
+</button>
+<button class="flex-shrink-0 w-24 h-24 rounded-lg border border-outline-variant/50 overflow-hidden opacity-70 hover:opacity-100 transition-opacity">
+<img alt="Thumbnail 3" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAHDTYtd8MrhMpcLPo4x32o_DBTKNR7irHznkdNAmjumtioYUXkeYWdDxcvaFGJQ8CGaivwJcNCw7SW6wb9dD2w8_aa7yEc3_bMEaC9I7GuEjeLQ0a_748F9WFuHzcOVrV54RLhF1aXvqdf3nLJvSkUILnAKCgvhibgTMCVhovkJQp1ajAFYNRc9bh2WhnAkeFOSxH6MjUp6fhgC7X3CDxfBVUddCpbAWOmXXT8O2kDmSOaTh8WV2PkvbyYSmIfiBogGFZc0JB65OhI"/>
+</button>
+<button class="flex-shrink-0 w-24 h-24 rounded-lg border border-outline-variant/50 overflow-hidden opacity-70 hover:opacity-100 transition-opacity flex items-center justify-center bg-surface-container-low">
+<span class="material-symbols-outlined text-outline">add_photo_alternate</span>
+</button>
+</div>
+</div>
+<!-- Right Column: Details & Seller Actions (Span 5) -->
+<div class="lg:col-span-5 flex flex-col gap-lg">
+<!-- Product Header Info -->
+<div class="flex justify-between items-start mb-2">
+<h1 id="product-title" class="font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface">Product Title</h1>
+<button id="btn-favorite" class="text-on-surface-variant hover:text-primary transition-colors p-2 bg-surface-container-low rounded-full">
+<span class="material-symbols-outlined">bookmark_border</span>
+</button>
+</div>
+<p id="product-price" class="font-display text-[32px] text-primary font-bold mb-4">$0.00</p>
+<p id="product-desc" class="font-body-md text-body-md text-on-surface-variant mb-6">
+                        Product Description
+                    </p>
+</div>
+<!-- Seller Card (Glassmorphic vibe) -->
+<div class="bg-white/80 backdrop-blur-xl border border-outline-variant/30 rounded-xl p-lg shadow-sm flex flex-col gap-md">
+<div class="flex items-center gap-md mb-2">
+<div class="w-12 h-12 rounded-full bg-surface-container-high overflow-hidden border border-outline-variant">
+<img id="seller-avatar" alt="Seller Avatar" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCzxO8KJ-8R40N924_WP4NG480A4MLNTJ2WV73zOWyrc6DkhjXvA_Oke6gak1Vc2-JO_gYdA-q26ZMnaYPLSQ4J6jVdyXDIPTehpPIk6kURuQD4gF5GBsjYQMN504E_n0rrzGc8IiO6t9VzKoSV6H3qDH8FC6Aw1jmtQb_gXy5VYYxDjx8FyTfIcEVloxMuaKd3AjfvWklDAaEh_kPDn1wsc0fWc2z7GXnjzHea2FI3hCwJ5xPFgbSr8wfpxohNxBMblYRRkJnFL0fB"/>
+</div>
+<div class="flex-1">
+<h3 id="seller-name" class="font-headline-md text-[18px] text-on-surface">Seller Name</h3>
+<div class="flex items-center gap-1 text-on-surface-variant font-label-md text-label-md">
+<span class="material-symbols-outlined text-[16px] text-secondary">verified</span>
+<span>Student • Seller</span>
+</div>
+</div>
+<div class="flex flex-col items-end">
+<div class="flex items-center text-primary">
+<span class="material-symbols-outlined fill text-[18px]">star</span>
+<span class="font-label-md text-label-md font-bold ml-1">4.9</span>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant">(42 reviews)</span>
+</div>
+</div>
+<!-- Action Buttons -->
+<div class="flex flex-col gap-3 mt-4">
+<button id="btn-buy" class="w-full bg-primary text-on-primary hover:bg-primary/90 font-label-md text-label-md py-3 rounded-lg transition-colors font-semibold flex justify-center items-center gap-2">
+<span class="material-symbols-outlined">shopping_cart</span>
+                            Buy Now
+                        </button>
+<div class="flex gap-3">
+<button id="btn-rent" class="flex-1 bg-transparent border-2 border-secondary text-secondary hover:bg-secondary/5 font-label-md text-label-md py-3 rounded-lg transition-colors font-semibold flex justify-center items-center gap-2">
+<span class="material-symbols-outlined">calendar_month</span>
+                                Rent
+                            </button>
+<button id="btn-message" class="flex-1 bg-surface-container-high text-on-surface hover:bg-surface-container-highest font-label-md text-label-md py-3 rounded-lg transition-colors font-semibold flex justify-center items-center gap-2">
+<span class="material-symbols-outlined">chat</span>
+                                Message
+                            </button>
+</div>
+</div>
+</div>
+<!-- Pickup Details -->
+<div class="bg-surface-container-lowest border border-outline-variant/30 rounded-xl p-md flex items-start gap-md">
+<div class="p-2 bg-primary-container/10 rounded-lg text-primary">
+<span class="material-symbols-outlined">location_on</span>
+</div>
+<div>
+<h4 class="font-label-md text-label-md text-on-surface font-semibold">Pickup Location</h4>
+<p class="font-body-md text-body-md text-on-surface-variant">Student Union Building (Main Lobby)</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Technical Specs & Details Section -->
+<div class="mt-xl border-t border-outline-variant/30 pt-xl">
+<h2 class="font-headline-md text-headline-md text-on-surface mb-lg">Technical Specifications</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-x-gutter gap-y-4 max-w-4xl">
+<!-- Spec Items -->
+<div class="flex justify-between py-3 border-b border-outline-variant/20">
+<span class="font-body-md text-body-md text-on-surface-variant">Processor</span>
+<span class="font-label-md text-label-md text-on-surface font-semibold">Apple M2 Pro (10-core CPU)</span>
+</div>
+<div class="flex justify-between py-3 border-b border-outline-variant/20">
+<span class="font-body-md text-body-md text-on-surface-variant">Memory</span>
+<span class="font-label-md text-label-md text-on-surface font-semibold">16GB Unified Memory</span>
+</div>
+<div class="flex justify-between py-3 border-b border-outline-variant/20">
+<span class="font-body-md text-body-md text-on-surface-variant">Storage</span>
+<span class="font-label-md text-label-md text-on-surface font-semibold">512GB SSD</span>
+</div>
+<div class="flex justify-between py-3 border-b border-outline-variant/20">
+<span class="font-body-md text-body-md text-on-surface-variant">Display</span>
+<span class="font-label-md text-label-md text-on-surface font-semibold">14.2" Liquid Retina XDR</span>
+</div>
+<div class="flex justify-between py-3 border-b border-outline-variant/20">
+<span class="font-body-md text-body-md text-on-surface-variant">Battery Cycle Count</span>
+<span class="font-label-md text-label-md text-on-surface font-semibold">45</span>
+</div>
+<div class="flex justify-between py-3 border-b border-outline-variant/20">
+<span class="font-body-md text-body-md text-on-surface-variant">Condition</span>
+<span class="font-label-md text-label-md text-secondary font-semibold">Excellent</span>
+</div>
+</div>
+</div>
+</main>
+<!-- Footer (Shared Component) -->
+<footer class="bg-surface-container-lowest dark:bg-inverse-surface font-body-md text-body-md. Labels: font-label-sm text-label-sm. w-full py-xl border-t border-outline-variant/30 dark:border-outline/20 flat no shadows">
+<div class="max-w-max-width mx-auto px-margin-mobile md:px-margin-desktop flex flex-col md:flex-row justify-between items-center gap-lg">
+<div class="font-headline-md text-headline-md font-bold text-primary dark:text-primary-fixed-dim">CampusMarket</div>
+<div class="flex flex-wrap justify-center gap-md md:gap-lg">
+<a class="text-on-surface-variant dark:text-outline-variant hover:text-on-surface dark:hover:text-surface-bright hover:underline decoration-primary dark:decoration-primary-fixed-dim opacity-80 hover:opacity-100 transition-opacity font-label-sm text-label-sm" href="#">Terms of Service</a>
+<a class="text-on-surface-variant dark:text-outline-variant hover:text-on-surface dark:hover:text-surface-bright hover:underline decoration-primary dark:decoration-primary-fixed-dim opacity-80 hover:opacity-100 transition-opacity font-label-sm text-label-sm" href="#">Privacy Policy</a>
+<a class="text-on-surface-variant dark:text-outline-variant hover:text-on-surface dark:hover:text-surface-bright hover:underline decoration-primary dark:decoration-primary-fixed-dim opacity-80 hover:opacity-100 transition-opacity font-label-sm text-label-sm" href="#">Campus Safety</a>
+<a class="text-on-surface-variant dark:text-outline-variant hover:text-on-surface dark:hover:text-surface-bright hover:underline decoration-primary dark:decoration-primary-fixed-dim opacity-80 hover:opacity-100 transition-opacity font-label-sm text-label-sm" href="#">Contact Us</a>
+</div>
+<div class="text-on-surface-variant dark:text-outline-variant font-label-sm text-label-sm">
+                © 2024 CampusMarket Inc. Built for Students.
+            </div>
+</div>
+</footer>
+<script type="module">
+  import { getListings, getFavorites, toggleFavorite, getQueryParam, saveMessages, getMessages } from './shared.js';
+
+  // 1. Get Product ID
+  const productId = getQueryParam("id") || "lst-1";
+  
+  // 2. Fetch Product from Database
+  const listings = getListings();
+  const product = listings.find(item => item.id === productId) || listings[0];
+
+  // 3. Render Product Details
+  document.getElementById("product-title").innerText = product.title;
+  document.getElementById("product-image").src = product.image;
+  
+  // Render Price display
+  const rentText = product.rentPrice ? ` or $${product.rentPrice}/mo rent` : '';
+  const isRentOnlyText = product.isRentOnly ? ` / ${product.rentInterval || 'wk'} rent` : '';
+  document.getElementById("product-price").innerHTML = `$${product.price.toFixed(2)} <span class="font-body-md text-body-md text-on-surface-variant font-normal">${rentText || isRentOnlyText}</span>`;
+  
+  document.getElementById("product-desc").innerText = product.description || "No description provided.";
+  
+  // Render Badges
+  const badgeContainer = document.getElementById("product-badge-container");
+  if (badgeContainer) {
+    const verifiedTag = product.rating >= 4.5 ? '<span class="bg-secondary/10 text-secondary font-label-sm text-label-sm px-3 py-1 rounded-full border border-secondary/20 shadow-sm">Verified</span>' : '';
+    badgeContainer.innerHTML = `
+      <span class="bg-surface/90 backdrop-blur-md text-on-surface font-label-sm text-label-sm px-3 py-1 rounded-full border border-outline-variant/20 shadow-sm">${product.condition}</span>
+      ${verifiedTag}
+    `;
+  }
+
+  // Render Seller Card info
+  document.getElementById("seller-name").innerText = product.seller || "Sarah Jenkins";
+  if (product.sellerAvatar) {
+    document.getElementById("seller-avatar").src = product.sellerAvatar;
+  }
+
+  // Handle Favorites toggle
+  const favBtn = document.getElementById("btn-favorite");
+  const favIcon = favBtn.querySelector("span");
+  
+  function updateFavoriteUI() {
+    const favorites = getFavorites();
+    const isFav = favorites.includes(product.id);
+    if (isFav) {
+      favIcon.innerText = "bookmark";
+      favIcon.classList.add("text-primary");
+    } else {
+      favIcon.innerText = "bookmark_border";
+      favIcon.classList.remove("text-primary");
+    }
+  }
+
+  favBtn.onclick = () => {
+    toggleFavorite(product.id);
+    updateFavoriteUI();
+  };
+
+  updateFavoriteUI();
+
+  // Handle Rent and Buy Actions
+  const btnBuy = document.getElementById("btn-buy");
+  const btnRent = document.getElementById("btn-rent");
+  
+  if (product.isRentOnly) {
+    btnBuy.disabled = true;
+    btnBuy.innerText = "Rent Only";
+    btnBuy.className = "w-full bg-outline-variant text-on-surface-variant font-label-md text-label-md py-3 rounded-lg cursor-not-allowed flex justify-center items-center gap-2";
+  } else {
+    btnBuy.onclick = () => {
+      alert(`Thank you for purchasing "${product.title}"! Your transaction is being processed.`);
+    };
+  }
+
+  if (product.rentPrice || product.isRentOnly) {
+    btnRent.onclick = () => {
+      alert(`Starting rental process for "${product.title}".`);
+    };
+  } else {
+    btnRent.style.display = "none";
+  }
+
+  // Handle Messaging Link
+  const btnMessage = document.getElementById("btn-message");
+  btnMessage.onclick = () => {
+    const messages = getMessages();
+    // Check if thread already exists for this seller
+    let thread = messages.find(t => t.senderName === product.seller);
+    if (!thread) {
+      // Create new thread
+      thread = {
+        threadId: `th-${Date.now()}`,
+        senderName: product.seller,
+        senderAvatar: product.sellerAvatar || "",
+        productContext: {
+          title: product.title,
+          price: `$${product.price.toFixed(2)}`,
+          image: product.image
+        },
+        online: true,
+        lastActive: "Now",
+        messages: [
+          { sender: "them", text: `Hi! I saw you are interested in "${product.title}". How can I help?`, time: "Now" }
+        ]
+      };
+      messages.unshift(thread);
+      saveMessages(messages);
+    }
+    // Redirect to messages page
+    window.location.href = `messages.html?threadId=${thread.threadId}`;
+  };
+</script>
+</body></html>
