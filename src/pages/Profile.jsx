@@ -13,6 +13,7 @@ export default function Profile() {
   const [showEditModal, setShowEditModal] = useState(false);
   const [editName, setEditName] = useState('');
   const [editMajor, setEditMajor] = useState('');
+  const [editYear, setEditYear] = useState('');
   const [editAvatar, setEditAvatar] = useState('');
 
   // Sync profile & listings internally
@@ -32,6 +33,7 @@ export default function Profile() {
   const openEditModal = () => {
     setEditName(profile.name);
     setEditMajor(profile.major);
+    setEditYear(profile.year || '');
     setEditAvatar(profile.avatar || '');
     setShowEditModal(true);
   };
@@ -42,6 +44,7 @@ export default function Profile() {
       ...profile,
       name: editName.trim() || profile.name,
       major: editMajor.trim() || profile.major,
+      year: editYear.trim() || profile.year,
       avatar: editAvatar.trim() || profile.avatar
     };
 
@@ -80,7 +83,7 @@ export default function Profile() {
               </h1>
               <span className="inline-flex items-center gap-1 bg-surface-container px-3 py-1 rounded-full font-label-sm text-label-sm text-primary w-fit mx-auto md:mx-0 font-semibold">
                 <span className="material-symbols-outlined text-[16px]">school</span>
-                {profile.major}
+                {profile.major} {profile.year && `• ${profile.year}`}
               </span>
             </div>
             <p className="font-body-md text-body-md text-on-surface-variant mb-4 max-w-lg leading-relaxed">
@@ -271,11 +274,20 @@ export default function Profile() {
                 />
               </div>
               <div>
-                <label className="block font-label-md text-label-md text-on-surface-variant mb-xs">Major & Year</label>
+                <label className="block font-label-md text-label-md text-on-surface-variant mb-xs">Branch / Major</label>
                 <input 
                   type="text" 
                   value={editMajor}
                   onChange={(e) => setEditMajor(e.target.value)}
+                  className="w-full rounded-lg border border-outline-variant bg-surface-container-lowest px-md py-2.5 text-body-md font-body-md outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+                />
+              </div>
+              <div>
+                <label className="block font-label-md text-label-md text-on-surface-variant mb-xs">Year</label>
+                <input 
+                  type="text" 
+                  value={editYear}
+                  onChange={(e) => setEditYear(e.target.value)}
                   className="w-full rounded-lg border border-outline-variant bg-surface-container-lowest px-md py-2.5 text-body-md font-body-md outline-none focus:border-primary focus:ring-1 focus:ring-primary"
                 />
               </div>

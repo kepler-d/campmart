@@ -205,7 +205,7 @@ export default function Dashboard() {
             </h1>
             <p className="font-body-md text-on-surface-variant text-sm mt-1 flex items-center justify-center md:justify-start gap-1">
               <span className="material-symbols-outlined text-primary text-[18px]">school</span>
-              <span>{profile.major}</span>
+              <span>{profile.major} {profile.year && `• ${profile.year}`}</span>
             </p>
           </div>
         </div>

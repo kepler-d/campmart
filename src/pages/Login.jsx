@@ -13,6 +13,7 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [major, setMajor] = useState('');
+  const [year, setYear] = useState('');
   
   // UI states
   const [showPassword, setShowPassword] = useState(false);
@@ -71,6 +72,7 @@ export default function Login() {
         const newProfile = {
           name: name.trim() || 'Student Trader',
           major: major.trim() || 'Undecided',
+          year: year.trim() || 'First Year',
           email: email.toLowerCase().trim(),
           avatar: `https://api.dicebear.com/7.x/adventurer/svg?seed=${encodeURIComponent(name || 'default')}`,
           rating: 5.0,
@@ -159,13 +161,24 @@ export default function Login() {
                   />
                 </div>
                 <div>
-                  <label className="block font-label-md text-label-md text-on-surface-variant mb-xs font-semibold">Major & Year</label>
+                  <label className="block font-label-md text-label-md text-on-surface-variant mb-xs font-semibold">Branch / Major</label>
                   <input 
                     required
                     type="text"
-                    placeholder="e.g. Computer Science, Jr"
+                    placeholder="e.g. Computer Science"
                     value={major}
                     onChange={(e) => setMajor(e.target.value)}
+                    className="w-full rounded-xl border border-outline-variant bg-surface-container-lowest px-md py-3 text-body-md font-body-md outline-none focus:border-primary placeholder-outline-variant/60"
+                  />
+                </div>
+                <div>
+                  <label className="block font-label-md text-label-md text-on-surface-variant mb-xs font-semibold">Year</label>
+                  <input 
+                    required
+                    type="text"
+                    placeholder="e.g. Sophomore, Junior, 3rd Year"
+                    value={year}
+                    onChange={(e) => setYear(e.target.value)}
                     className="w-full rounded-xl border border-outline-variant bg-surface-container-lowest px-md py-3 text-body-md font-body-md outline-none focus:border-primary placeholder-outline-variant/60"
                   />
                 </div>

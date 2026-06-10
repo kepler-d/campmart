@@ -69,6 +69,7 @@ const DEFAULT_LISTINGS = [
 const DEFAULT_PROFILE = {
   name: "Hardik",
   major: "Computer Science",
+  year: "4th Year",
   email: "hardik@university.edu",
   avatar: "https://lh3.googleusercontent.com/aida-public/AB6AXuBwozUBToAeWm6qEAFt4XpKTKQvJVko-_u9NhR9mUQpKXAy9c2payVVkBjnDI90kfoyEki07Rro02oX02iytGaoYmn0Ej6DETSil0VE-Sj6nJvg-XP4YKXjRAGkTobHlnEdMM4TrFNLy0A4XvQRDVpYGl84ocnA5aZlpNMwbgvfrZHLbCMcm67T2pPU0f0f9uyuE0o5WKpFxjI0NjyUv7POLY5Y55bEfr5Z4yzT5hTi0B419ePRJori6c39wesX8XLchKTKxUxWGXdM",
   rating: 4.9,
