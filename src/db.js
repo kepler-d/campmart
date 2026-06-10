@@ -1,6 +1,5 @@
-// Campus Marketplace Hub - Shared State & Interactivity Manager
+// Campus Marketplace Hub - Shared State & LocalStorage Database Manager
 
-// --- Default Data Initializers ---
 const DEFAULT_LISTINGS = [
   {
     id: "lst-1",
@@ -138,44 +137,53 @@ const DEFAULT_MESSAGES = [
 ];
 
 // Seed databases if they are empty
-if (!localStorage.getItem("campus_listings")) {
-  localStorage.setItem("campus_listings", JSON.stringify(DEFAULT_LISTINGS));
-}
-if (!localStorage.getItem("campus_profile")) {
-  localStorage.setItem("campus_profile", JSON.stringify(DEFAULT_PROFILE));
-}
-if (!localStorage.getItem("campus_messages")) {
-  localStorage.setItem("campus_messages", JSON.stringify(DEFAULT_MESSAGES));
-}
-if (!localStorage.getItem("campus_favorites")) {
-  localStorage.setItem("campus_favorites", JSON.stringify(["lst-2"])); // Default favorite MacBook Pro
+export function initDB() {
+  if (!localStorage.getItem("campus_listings")) {
+    localStorage.setItem("campus_listings", JSON.stringify(DEFAULT_LISTINGS));
+  }
+  if (!localStorage.getItem("campus_profile")) {
+    localStorage.setItem("campus_profile", JSON.stringify(DEFAULT_PROFILE));
+  }
+  if (!localStorage.getItem("campus_messages")) {
+    localStorage.setItem("campus_messages", JSON.stringify(DEFAULT_MESSAGES));
+  }
+  if (!localStorage.getItem("campus_favorites")) {
+    localStorage.setItem("campus_favorites", JSON.stringify(["lst-2"])); // Default favorite MacBook Pro
+  }
 }
 
+// Ensure database is initialized immediately when this module loads
+initDB();
+
 // --- Helper Functions to Interact with Database ---
+
 export function getListings() {
-  return JSON.parse(localStorage.getItem("campus_listings"));
+  return JSON.parse(localStorage.getItem("campus_listings")) || [];
 }
 
 export function saveListings(listings) {
   localStorage.setItem("campus_listings", JSON.stringify(listings));
+  // Dispatch dynamic event for updates
+  window.dispatchEvent(new Event('listingsUpdated'));
 }
 
 export function getProfile() {
-  return JSON.parse(localStorage.getItem("campus_profile"));
+  return JSON.parse(localStorage.getItem("campus_profile")) || DEFAULT_PROFILE;
 }
 
 export function saveProfile(profile) {
   localStorage.setItem("campus_profile", JSON.stringify(profile));
-  // Notify other windows/components of changes
+  // Dispatch custom profile update event
   window.dispatchEvent(new Event('profileChanged'));
 }
 
 export function getMessages() {
-  return JSON.parse(localStorage.getItem("campus_messages"));
+  return JSON.parse(localStorage.getItem("campus_messages")) || [];
 }
 
 export function saveMessages(threads) {
   localStorage.setItem("campus_messages", JSON.stringify(threads));
+  window.dispatchEvent(new Event('messagesUpdated'));
 }
 
 export function getFavorites() {
@@ -190,195 +198,6 @@ export function toggleFavorite(listingId) {
     favs.push(listingId);
   }
   localStorage.setItem("campus_favorites", JSON.stringify(favs));
+  window.dispatchEvent(new Event('favoritesUpdated'));
   return favs.includes(listingId);
 }
-
-// --- Dark Mode / Styling Controller ---
-export function initTheme() {
-  const currentTheme = localStorage.getItem("theme") || "light";
-  if (currentTheme === "dark") {
-    document.documentElement.classList.add("dark");
-    document.documentElement.classList.remove("light");
-  } else {
-    document.documentElement.classList.add("light");
-    document.documentElement.classList.remove("dark");
-  }
-}
-
-export function toggleTheme() {
-  if (document.documentElement.classList.contains("dark")) {
-    document.documentElement.classList.remove("dark");
-    document.documentElement.classList.add("light");
-    localStorage.setItem("theme", "light");
-  } else {
-    document.documentElement.classList.remove("light");
-    document.documentElement.classList.add("dark");
-    localStorage.setItem("theme", "dark");
-  }
-}
-
-// --- Sync Layouts (Headers, Sidebars, Active States) ---
-export function syncHeaderAndNavigation() {
-  const profile = getProfile();
-  
-  // 1. Sync Avatars
-  const headerAvatars = document.querySelectorAll("header img[alt*='User avatar'], header img[alt*='avatar']");
-  headerAvatars.forEach(img => {
-    if (profile.avatar) img.src = profile.avatar;
-    // Bind click to go to profile
-    img.style.cursor = "pointer";
-    img.onclick = () => { window.location.href = "profile.html"; };
-  });
-
-  // 2. Sync Profile Avatar in Leaderboard / Sidebars
-  const navAvatars = document.querySelectorAll("nav img[alt*='avatar']");
-  navAvatars.forEach(img => {
-    if (profile.avatar) img.src = profile.avatar;
-  });
-
-  // 2b. Sync Brand Logos to click to dashboard (marketplace.html)
-  const brandLogos = document.querySelectorAll("header .font-headline-md, header h1, nav .font-headline-md, header span.font-headline-md");
-  brandLogos.forEach(logo => {
-    if (logo.textContent.trim().toLowerCase().includes("campusmarket")) {
-      logo.style.cursor = "pointer";
-      logo.onclick = () => { window.location.href = "marketplace.html"; };
-    }
-  });
-
-  // 3. Fix nav links to direct correctly
-  const path = window.location.pathname;
-  const isDashboardPage = path.endsWith("dashboard.html");
-  const isMarketplacePage = path.endsWith("marketplace.html") || path.endsWith("/") || (path.endsWith("index.html") === false && path.includes(".") === false && !isDashboardPage);
-
-  const navLinks = document.querySelectorAll("nav a, header a");
-  navLinks.forEach(link => {
-    const text = link.textContent.trim().toLowerCase();
-    const icon = link.querySelector(".material-symbols-outlined");
-
-    const makeActive = (el) => {
-      el.classList.add("bg-primary-container/20", "text-primary", "border-l-4", "border-primary", "font-bold");
-      el.classList.remove("text-on-surface-variant");
-      if (icon) {
-        icon.classList.add("icon-fill", "text-primary");
-        icon.classList.remove("text-outline");
-      }
-    };
-
-    const makeInactive = (el) => {
-      el.classList.remove("bg-primary-container/20", "text-primary", "border-l-4", "border-primary", "font-bold");
-      el.classList.add("text-on-surface-variant");
-      if (icon) {
-        icon.classList.remove("icon-fill", "text-primary");
-        icon.classList.add("text-outline");
-      }
-    };
-
-    if (text.includes("dashboard") || text.includes("overview")) {
-      link.href = "dashboard.html";
-      if (isDashboardPage) {
-        makeActive(link);
-      } else {
-        makeInactive(link);
-      }
-    } else if (text.includes("marketplace") || text.includes("explore")) {
-      link.href = "marketplace.html";
-      if (isMarketplacePage) {
-        makeActive(link);
-      } else {
-        makeInactive(link);
-      }
-    } else if (text.includes("messages")) {
-      link.href = "messages.html";
-      if (path.endsWith("messages.html")) {
-        makeActive(link);
-      } else {
-        makeInactive(link);
-      }
-    } else if (text.includes("leaderboard")) {
-      link.href = "leaderboard.html";
-      if (path.endsWith("leaderboard.html")) {
-        makeActive(link);
-      } else {
-        makeInactive(link);
-      }
-    } else if (text.includes("admin")) {
-      link.href = "admin.html";
-      if (path.endsWith("admin.html")) {
-        makeActive(link);
-      } else {
-        makeInactive(link);
-      }
-    } else if (text.includes("profile")) {
-      link.href = "profile.html";
-      if (path.endsWith("profile.html")) {
-        makeActive(link);
-      } else {
-        makeInactive(link);
-      }
-    } else if (text.includes("sign out") || text.includes("logout")) {
-      link.href = "index.html";
-    }
-  });
-
-  // Wire up specific buttons
-  const listButtons = document.querySelectorAll("button, a");
-  listButtons.forEach(btn => {
-    const text = btn.innerText.trim().toLowerCase();
-    if (text.includes("list item") || text.includes("create listing") || text.includes("sell an item")) {
-      btn.onclick = (e) => {
-        e.preventDefault();
-        window.location.href = "create-listing.html";
-      };
-    }
-  });
-
-  // Search redirection
-  const searchInputs = document.querySelectorAll("input[placeholder*='Search']");
-  searchInputs.forEach(input => {
-    input.addEventListener("keydown", (e) => {
-      if (e.key === "Enter") {
-        window.location.href = `marketplace.html?search=${encodeURIComponent(input.value)}`;
-      }
-    });
-  });
-
-  // Add Theme Toggle button dynamically in top nav bar if missing
-  const headerNav = document.querySelector("header .flex.items-center.gap-sm, header .flex.items-center.gap-md");
-  if (headerNav && !document.getElementById("theme-toggle")) {
-    const themeBtn = document.createElement("button");
-    themeBtn.id = "theme-toggle";
-    themeBtn.className = "text-on-surface-variant hover:bg-surface-container-low hover:text-primary p-2 rounded-full transition-colors";
-    themeBtn.innerHTML = `<span class="material-symbols-outlined">dark_mode</span>`;
-    themeBtn.onclick = () => {
-      toggleTheme();
-      // update icon
-      const icon = themeBtn.querySelector("span");
-      icon.innerText = document.documentElement.classList.contains("dark") ? "light_mode" : "dark_mode";
-    };
-    
-    // Set initial icon
-    const isDark = document.documentElement.classList.contains("dark");
-    themeBtn.querySelector("span").innerText = isDark ? "light_mode" : "dark_mode";
-    
-    // Insert before profile avatar if possible
-    const avatarBtn = headerNav.querySelector("div.rounded-full, button.rounded-full");
-    if (avatarBtn) {
-      headerNav.insertBefore(themeBtn, avatarBtn);
-    } else {
-      headerNav.appendChild(themeBtn);
-    }
-  }
-}
-
-// Extract query parameters
-export function getQueryParam(param) {
-  const urlParams = new URLSearchParams(window.location.search);
-  return urlParams.get(param);
-}
-
-// Global initialization
-document.addEventListener("DOMContentLoaded", () => {
-  initTheme();
-  syncHeaderAndNavigation();
-  window.addEventListener('profileChanged', syncHeaderAndNavigation);
-});
