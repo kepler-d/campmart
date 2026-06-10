@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { saveProfile } from '../db';
+import { saveProfile, getProfile } from '../db';
 
 export default function Login() {
   const navigate = useNavigate();
@@ -20,7 +20,7 @@ export default function Login() {
   const [errorMsg, setErrorMsg] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleDemoLogin = () => {
+  const handleDemoAdminLogin = () => {
     setErrorMsg('');
     setEmail('hardik@university.edu');
     setPassword('password123');
@@ -28,6 +28,52 @@ export default function Login() {
     // Simulate short network delay
     setIsLoading(true);
     setTimeout(() => {
+      const adminProfile = {
+        name: "Hardik",
+        major: "Computer Science",
+        year: "4th Year",
+        email: "hardik@university.edu",
+        avatar: "https://lh3.googleusercontent.com/aida-public/AB6AXuBwozUBToAeWm6qEAFt4XpKTKQvJVko-_u9NhR9mUQpKXAy9c2payVVkBjnDI90kfoyEki07Rro02oX02iytGaoYmn0Ej6DETSil0VE-Sj6nJvg-XP4YKXjRAGkTobHlnEdMM4TrFNLy0A4XvQRDVpYGl84ocnA5aZlpNMwbgvfrZHLbCMcm67T2pPU0f0f9uyuE0o5WKpFxjI0NjyUv7POLY5Y55bEfr5Z4yzT5hTi0B419ePRJori6c39wesX8XLchKTKxUxWGXdM",
+        rating: 4.9,
+        rank: 12,
+        points: 1540,
+        listingsCount: 4,
+        salesCount: 8,
+        purchasedCount: 14,
+        isAdmin: true
+      };
+      saveProfile(adminProfile);
+      localStorage.setItem('is_logged_in', 'true');
+      window.dispatchEvent(new Event('authChanged'));
+      window.dispatchEvent(new Event('profileChanged'));
+      setIsLoading(false);
+      navigate('/marketplace');
+    }, 600);
+  };
+
+  const handleDemoUserLogin = () => {
+    setErrorMsg('');
+    setEmail('student@university.edu');
+    setPassword('password123');
+    
+    // Simulate short network delay
+    setIsLoading(true);
+    setTimeout(() => {
+      const userProfile = {
+        name: "Aarav Sharma",
+        major: "Mechanical Engineering",
+        year: "2nd Year",
+        email: "student@university.edu",
+        avatar: "https://api.dicebear.com/7.x/adventurer/svg?seed=Aarav",
+        rating: 4.8,
+        rank: 45,
+        points: 320,
+        listingsCount: 1,
+        salesCount: 2,
+        purchasedCount: 5,
+        isAdmin: false
+      };
+      saveProfile(userProfile);
       localStorage.setItem('is_logged_in', 'true');
       window.dispatchEvent(new Event('authChanged'));
       window.dispatchEvent(new Event('profileChanged'));
@@ -67,6 +113,49 @@ export default function Login() {
     setTimeout(() => {
       if (mode === 'login') {
         // Mock authentication success
+        const currentProfile = getProfile();
+        const isDemoAdmin = email.toLowerCase().trim() === 'hardik@university.edu';
+        const isDemoUser = email.toLowerCase().trim() === 'student@university.edu';
+        
+        let updatedProfile = {
+          ...currentProfile,
+          email: email.toLowerCase().trim(),
+          isAdmin: isDemoAdmin
+        };
+        
+        if (isDemoAdmin) {
+          updatedProfile = {
+            ...updatedProfile,
+            name: "Hardik",
+            major: "Computer Science",
+            year: "4th Year",
+            avatar: "https://lh3.googleusercontent.com/aida-public/AB6AXuBwozUBToAeWm6qEAFt4XpKTKQvJVko-_u9NhR9mUQpKXAy9c2payVVkBjnDI90kfoyEki07Rro02oX02iytGaoYmn0Ej6DETSil0VE-Sj6nJvg-XP4YKXjRAGkTobHlnEdMM4TrFNLy0A4XvQRDVpYGl84ocnA5aZlpNMwbgvfrZHLbCMcm67T2pPU0f0f9uyuE0o5WKpFxjI0NjyUv7POLY5Y55bEfr5Z4yzT5hTi0B419ePRJori6c39wesX8XLchKTKxUxWGXdM",
+            rating: 4.9,
+            rank: 12,
+            points: 1540,
+            listingsCount: 4,
+            salesCount: 8,
+            purchasedCount: 14,
+            isAdmin: true
+          };
+        } else if (isDemoUser) {
+          updatedProfile = {
+            ...updatedProfile,
+            name: "Aarav Sharma",
+            major: "Mechanical Engineering",
+            year: "2nd Year",
+            avatar: "https://api.dicebear.com/7.x/adventurer/svg?seed=Aarav",
+            rating: 4.8,
+            rank: 45,
+            points: 320,
+            listingsCount: 1,
+            salesCount: 2,
+            purchasedCount: 5,
+            isAdmin: false
+          };
+        }
+        
+        saveProfile(updatedProfile);
         localStorage.setItem('is_logged_in', 'true');
         window.dispatchEvent(new Event('authChanged'));
         window.dispatchEvent(new Event('profileChanged'));
@@ -85,7 +174,8 @@ export default function Login() {
           points: 100,
           listingsCount: 0,
           salesCount: 0,
-          purchasedCount: 0
+          purchasedCount: 0,
+          isAdmin: false
         };
 
         saveProfile(newProfile);
@@ -277,19 +367,37 @@ export default function Login() {
                 <div className="flex-grow border-t border-outline-variant/35"></div>
               </div>
 
-              {/* Quick Login Assist Card */}
-              <div 
-                onClick={handleDemoLogin}
-                className="bg-primary/5 hover:bg-primary/10 border border-primary/20 p-md rounded-xl flex items-center gap-md cursor-pointer transition-all hover:scale-[1.02] duration-200"
-              >
-                <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary shrink-0">
-                  <span className="material-symbols-outlined icon-fill">school</span>
+              {/* Quick Login Assist Cards */}
+              <div className="flex flex-col gap-sm">
+                {/* Admin Card */}
+                <div 
+                  onClick={handleDemoAdminLogin}
+                  className="bg-primary/5 hover:bg-primary/10 border border-primary/20 p-md rounded-xl flex items-center gap-md cursor-pointer transition-all hover:scale-[1.02] duration-200"
+                >
+                  <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary shrink-0">
+                    <span className="material-symbols-outlined icon-fill">admin_panel_settings</span>
+                  </div>
+                  <div className="text-left overflow-hidden flex-1">
+                    <p className="font-label-md text-xs font-bold text-primary mb-0.5 font-semibold">Demo Admin Account</p>
+                    <p className="text-[11px] text-on-surface-variant truncate">hardik@university.edu</p>
+                  </div>
+                  <span className="material-symbols-outlined text-primary text-xl animate-pulse shrink-0">login</span>
                 </div>
-                <div className="text-left overflow-hidden">
-                  <p className="font-label-md text-xs font-bold text-primary mb-0.5">Demo Account Login</p>
-                  <p className="text-[11px] text-on-surface-variant truncate">hardik@university.edu</p>
+
+                {/* User Card */}
+                <div 
+                  onClick={handleDemoUserLogin}
+                  className="bg-secondary/5 hover:bg-secondary/10 border border-secondary/20 p-md rounded-xl flex items-center gap-md cursor-pointer transition-all hover:scale-[1.02] duration-200"
+                >
+                  <div className="w-10 h-10 rounded-full bg-secondary/20 flex items-center justify-center text-secondary shrink-0">
+                    <span className="material-symbols-outlined icon-fill">school</span>
+                  </div>
+                  <div className="text-left overflow-hidden flex-1">
+                    <p className="font-label-md text-xs font-bold text-secondary mb-0.5 font-semibold">Demo User Account</p>
+                    <p className="text-[11px] text-on-surface-variant truncate">student@university.edu</p>
+                  </div>
+                  <span className="material-symbols-outlined text-secondary text-xl animate-pulse shrink-0">login</span>
                 </div>
-                <span className="material-symbols-outlined text-primary ml-auto text-xl animate-pulse">login</span>
               </div>
             </>
           )}

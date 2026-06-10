@@ -1,20 +1,32 @@
 import React, { useState, useEffect } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { getMessages } from '../db';
+import { getMessages, getProfile } from '../db';
 
 export default function Sidebar() {
   const [unreadCount, setUnreadCount] = useState(3);
+  const [profile, setProfile] = useState(getProfile());
   const navigate = useNavigate();
 
   useEffect(() => {
     const updateUnread = () => {
       const threads = getMessages();
-      // Count messages matching specific conditions or just use standard mock
       setUnreadCount(threads.length > 0 ? threads.length : 3);
     };
     updateUnread();
     window.addEventListener('messagesUpdated', updateUnread);
     return () => window.removeEventListener('messagesUpdated', updateUnread);
+  }, []);
+
+  useEffect(() => {
+    const syncProfile = () => {
+      setProfile(getProfile());
+    };
+    window.addEventListener('profileChanged', syncProfile);
+    window.addEventListener('authChanged', syncProfile);
+    return () => {
+      window.removeEventListener('profileChanged', syncProfile);
+      window.removeEventListener('authChanged', syncProfile);
+    };
   }, []);
 
   const navLinkClass = ({ isActive }) =>
@@ -83,14 +95,16 @@ export default function Sidebar() {
             )}
           </NavLink>
 
-          <NavLink to="/admin" className={navLinkClass}>
-            {({ isActive }) => (
-              <>
-                <span className={iconClass(isActive)}>settings</span>
-                Admin
-              </>
-            )}
-          </NavLink>
+          {profile.isAdmin && (
+            <NavLink to="/admin" className={navLinkClass}>
+              {({ isActive }) => (
+                <>
+                  <span className={iconClass(isActive)}>settings</span>
+                  Admin
+                </>
+              )}
+            </NavLink>
+          )}
 
         </div>
 
