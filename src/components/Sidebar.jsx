@@ -105,8 +105,12 @@ export default function Sidebar() {
           </button>
           
           <button 
-            onClick={() => navigate('/')}
-            className="flex items-center gap-md text-on-surface-variant w-full py-3 px-lg hover:bg-error/10 hover:text-error transition-all hover:translate-x-1 duration-200 font-label-md text-label-md group border-l-4 border-transparent text-left"
+            onClick={() => {
+              localStorage.removeItem('is_logged_in');
+              window.dispatchEvent(new Event('authChanged'));
+              navigate('/');
+            }}
+            className="flex items-center gap-md text-on-surface-variant w-full py-3 px-lg hover:bg-error/10 hover:text-error transition-all hover:translate-x-1 duration-200 font-label-md text-label-md group border-l-4 border-transparent text-left cursor-pointer"
           >
             <span className="material-symbols-outlined text-outline group-hover:text-error transition-colors">logout</span>
             Sign Out

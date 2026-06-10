@@ -4,18 +4,23 @@ import { getProfile } from '../db';
 
 export default function Header() {
   const [profile, setProfile] = useState(getProfile());
+  const [isLoggedIn, setIsLoggedIn] = useState(localStorage.getItem('is_logged_in') === 'true');
   const [searchVal, setSearchVal] = useState('');
   const [isDarkMode, setIsDarkMode] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
 
   useEffect(() => {
-    // Sync profile on profile change events
-    const handleProfileChange = () => {
+    const syncAuth = () => {
+      setIsLoggedIn(localStorage.getItem('is_logged_in') === 'true');
       setProfile(getProfile());
     };
-    window.addEventListener('profileChanged', handleProfileChange);
-    return () => window.removeEventListener('profileChanged', handleProfileChange);
+    window.addEventListener('authChanged', syncAuth);
+    window.addEventListener('profileChanged', syncAuth);
+    return () => {
+      window.removeEventListener('authChanged', syncAuth);
+      window.removeEventListener('profileChanged', syncAuth);
+    };
   }, []);
 
   useEffect(() => {
@@ -126,16 +131,25 @@ export default function Header() {
           </button>
 
           {/* Profile Avatar */}
-          <button 
-            onClick={() => navigate('/profile')}
-            className="ml-sm rounded-full overflow-hidden border-2 border-surface-container hover:border-primary transition-colors w-10 h-10 shrink-0 shadow-sm active:scale-95 duration-100"
-          >
-            <img 
-              alt="User avatar" 
-              className="w-full h-full object-cover" 
-              src={profile.avatar || 'https://via.placeholder.com/40'}
-            />
-          </button>
+          {isLoggedIn ? (
+            <button 
+              onClick={() => navigate('/profile')}
+              className="ml-sm rounded-full overflow-hidden border-2 border-surface-container hover:border-primary transition-colors w-10 h-10 shrink-0 shadow-sm active:scale-95 duration-100"
+            >
+              <img 
+                alt="User avatar" 
+                className="w-full h-full object-cover" 
+                src={profile.avatar || 'https://via.placeholder.com/40'}
+              />
+            </button>
+          ) : (
+            <button 
+              onClick={() => navigate('/login')}
+              className="ml-sm bg-primary text-on-primary px-5 py-2.5 rounded-full font-label-md text-label-md hover:bg-primary/95 transition-colors shadow-sm font-semibold active:scale-95 duration-100 border-0 cursor-pointer"
+            >
+              Sign In
+            </button>
+          )}
         </div>
       </div>
     </header>
