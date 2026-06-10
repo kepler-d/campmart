@@ -8,9 +8,9 @@ export default function Login() {
   // Auth modes: 'login' or 'register'
   const [mode, setMode] = useState('login');
 
-  // Input states
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [name, setName] = useState('');
   const [major, setMajor] = useState('');
   const [year, setYear] = useState('');
@@ -53,6 +53,11 @@ export default function Login() {
 
     if (password.length < 6) {
       setErrorMsg('Password must be at least 6 characters.');
+      return;
+    }
+
+    if (mode === 'register' && password !== confirmPassword) {
+      setErrorMsg('Passwords do not match.');
       return;
     }
 
@@ -219,6 +224,22 @@ export default function Login() {
                 </button>
               </div>
             </div>
+
+            {mode === 'register' && (
+              <div>
+                <label className="block font-label-md text-label-md text-on-surface-variant mb-xs font-semibold">Confirm Password</label>
+                <div className="relative">
+                  <input 
+                    required
+                    type={showPassword ? "text" : "password"}
+                    placeholder="Repeat password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    className="w-full rounded-xl border border-outline-variant bg-surface-container-lowest pl-md pr-12 py-3 text-body-md font-body-md outline-none focus:border-primary placeholder-outline-variant/60"
+                  />
+                </div>
+              </div>
+            )}
 
             {mode === 'login' && (
               <div className="text-right">
