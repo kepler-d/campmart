@@ -181,10 +181,10 @@ export default function Admin() {
         <div className="col-span-12 lg:col-span-4 glass-card rounded-xl p-6 flex flex-col">
           <h3 className="font-headline-md text-headline-md font-semibold text-on-surface mb-6 font-bold">Category Usage</h3>
           <div className="flex-1 flex items-center justify-center relative min-h-[180px]">
-            <div className="w-40 h-40 rounded-full border-[14px] border-surface-container-highest relative flex items-center justify-center" style={{ borderTopColor: '#3525cd', borderRightColor: '#006c49', borderBottomColor: '#a04500', transform: "rotate(45deg)" }}>
-              <div className="absolute inset-0 bg-transparent rounded-full flex items-center justify-center" style={{ transform: "rotate(-45deg)" }}>
+            <div className="w-40 h-40 rounded-full relative flex items-center justify-center" style={{ background: "conic-gradient(#3525cd 0% 40%, #006c49 40% 70%, #a04500 70% 85%, #7b3300 85% 95%, #777587 95% 100%)" }}>
+              <div className="absolute inset-[14px] bg-surface-container-lowest dark:bg-inverse-surface rounded-full flex items-center justify-center">
                 <div className="text-center">
-                  <span className="block font-headline-md text-headline-md font-bold text-on-surface">4</span>
+                  <span className="block font-headline-md text-headline-md font-bold text-on-surface">5</span>
                   <span className="font-label-sm text-label-sm text-outline uppercase font-semibold">Categories</span>
                 </div>
               </div>
@@ -196,7 +196,7 @@ export default function Admin() {
                 <span className="w-3 h-3 rounded-full bg-primary"></span>
                 <span className="font-label-md text-label-md text-on-surface">Textbooks</span>
               </div>
-              <span className="font-label-md text-label-md font-semibold">45%</span>
+              <span className="font-label-md text-label-md font-semibold">40%</span>
             </div>
             <div className="flex justify-between items-center">
               <div className="flex items-center gap-2">
@@ -211,6 +211,20 @@ export default function Admin() {
                 <span className="font-label-md text-label-md text-on-surface">Furniture</span>
               </div>
               <span className="font-label-md text-label-md font-semibold">15%</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <div className="flex items-center gap-2">
+                <span className="w-3 h-3 rounded-full bg-tertiary"></span>
+                <span className="font-label-md text-label-md text-on-surface">Apparel</span>
+              </div>
+              <span className="font-label-md text-label-md font-semibold">10%</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <div className="flex items-center gap-2">
+                <span className="w-3 h-3 rounded-full bg-outline"></span>
+                <span className="font-label-md text-label-md text-on-surface">Other</span>
+              </div>
+              <span className="font-label-md text-label-md font-semibold">5%</span>
             </div>
           </div>
         </div>

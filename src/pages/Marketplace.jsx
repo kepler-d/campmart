@@ -176,7 +176,7 @@ export default function Marketplace() {
           <div className="flex flex-col gap-sm">
             <h3 className="font-label-sm text-label-sm text-outline uppercase tracking-wider">Category</h3>
             <div className="flex flex-col gap-xs">
-              {['Textbooks', 'Electronics', 'Furniture', 'Apparel'].map(cat => (
+              {['Textbooks', 'Electronics', 'Furniture', 'Apparel', 'Other'].map(cat => (
                 <label 
                   key={cat}
                   className="flex items-center gap-md p-2 rounded-md hover:bg-surface-container-low cursor-pointer transition-colors"

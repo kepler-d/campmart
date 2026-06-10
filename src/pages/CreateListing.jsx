@@ -228,6 +228,7 @@ export default function CreateListing() {
                           <option value="Electronics">Electronics</option>
                           <option value="Furniture">Furniture</option>
                           <option value="Apparel">Apparel</option>
+                          <option value="Other">Other</option>
                         </select>
                         <span className="material-symbols-outlined absolute right-md top-1/2 -translate-y-1/2 text-outline pointer-events-none">expand_more</span>
                       </div>
