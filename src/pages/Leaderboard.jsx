@@ -50,7 +50,7 @@ export default function Leaderboard() {
           </p>
           <div className="w-full bg-surface/50 rounded-lg p-sm text-center border border-outline-variant/20 z-10">
             <p className="font-label-sm text-label-sm text-on-surface-variant">Total Volume</p>
-            <p className="font-headline-md text-headline-md font-bold text-primary">$1,240</p>
+            <p className="font-headline-md text-headline-md font-bold text-primary">₹1,240</p>
           </div>
         </div>
 
@@ -70,7 +70,7 @@ export default function Leaderboard() {
           </p>
           <div className="w-full bg-primary-container/10 rounded-lg p-md text-center border border-primary/10 z-10">
             <p className="font-label-sm text-label-sm text-primary">Total Volume</p>
-            <p className="font-headline-lg text-headline-lg font-black text-primary">$3,850</p>
+            <p className="font-headline-lg text-headline-lg font-black text-primary">₹3,850</p>
             <p className="font-label-sm text-[10px] text-on-surface-variant mt-1">42 Transactions</p>
           </div>
         </div>
@@ -91,7 +91,7 @@ export default function Leaderboard() {
           </p>
           <div className="w-full bg-surface/50 rounded-lg p-sm text-center border border-outline-variant/20 z-10">
             <p className="font-label-sm text-label-sm text-on-surface-variant">Total Volume</p>
-            <p className="font-headline-md text-headline-md font-bold text-primary">$980</p>
+            <p className="font-headline-md text-headline-md font-bold text-primary">₹980</p>
           </div>
         </div>
       </div>
@@ -122,7 +122,7 @@ export default function Leaderboard() {
               </div>
             </div>
             <div className="text-right">
-              <p className="font-label-md text-label-md font-bold text-on-surface">$845</p>
+              <p className="font-label-md text-label-md font-bold text-on-surface">₹845</p>
               <p className="font-label-sm text-label-sm text-secondary flex items-center justify-end gap-[2px]">
                 <span className="material-symbols-outlined text-[14px]">trending_up</span> +12%
               </p>
@@ -142,7 +142,7 @@ export default function Leaderboard() {
               </div>
             </div>
             <div className="text-right">
-              <p className="font-label-md text-label-md font-bold text-on-surface">$720</p>
+              <p className="font-label-md text-label-md font-bold text-on-surface">₹720</p>
               <p className="font-label-sm text-label-sm text-outline flex items-center justify-end gap-[2px]">
                 <span className="material-symbols-outlined text-[14px]">trending_flat</span> 0%
               </p>
@@ -162,7 +162,7 @@ export default function Leaderboard() {
               </div>
             </div>
             <div className="text-right">
-              <p className="font-label-md text-label-md font-bold text-on-surface">$650</p>
+              <p className="font-label-md text-label-md font-bold text-on-surface">₹650</p>
               <p className="font-label-sm text-label-sm text-error flex items-center justify-end gap-[2px]">
                 <span className="material-symbols-outlined text-[14px]">trending_down</span> -3%
               </p>

@@ -76,8 +76,8 @@ export default function ProductDetails() {
         productContext: {
           title: product.title,
           price: product.isRentOnly 
-            ? `$${(product.rentPrice || 0).toFixed(2)}/mo`
-            : `$${product.price.toFixed(2)}`,
+            ? `₹${(product.rentPrice || 0).toFixed(2)}/mo`
+            : `₹${product.price.toFixed(2)}`,
           image: product.image
         },
         online: true,
@@ -169,11 +169,11 @@ export default function ProductDetails() {
             
             <p className="font-display text-[32px] text-primary font-black mb-4 leading-none">
               {product.isRentOnly 
-                ? `$${(product.rentPrice || 0).toFixed(2)}/mo` 
-                : `$${product.price.toFixed(2)}`}
+                ? `₹${(product.rentPrice || 0).toFixed(2)}/mo` 
+                : `₹${product.price.toFixed(2)}`}
               {product.rentPrice && !product.isRentOnly && (
                 <span className="font-body-md text-body-md text-outline font-normal ml-3">
-                  (or ${product.rentPrice}/mo rent)
+                  (or ₹{product.rentPrice}/mo rent)
                 </span>
               )}
             </p>
@@ -278,7 +278,7 @@ export default function ProductDetails() {
                   </Link>
                   <div className="mt-auto flex justify-between items-baseline pt-2">
                     <span className="font-label-md text-primary font-bold">
-                      {item.isRentOnly ? `$${(item.rentPrice || 0).toFixed(2)}/mo` : `$${item.price.toFixed(2)}`}
+                      {item.isRentOnly ? `₹${(item.rentPrice || 0).toFixed(2)}/mo` : `₹${item.price.toFixed(2)}`}
                     </span>
                     <span className="text-[11px] text-outline font-semibold px-2 py-0.5 bg-surface-container rounded-md">
                       {item.condition}

@@ -191,7 +191,7 @@ export default function Profile() {
                 <div className="h-48 bg-surface-variant w-full relative">
                   <img alt={item.title} className="w-full h-full object-cover" src={item.image}/>
                   <span className="absolute top-3 right-3 bg-surface/90 backdrop-blur px-2 py-1 rounded text-label-sm font-bold text-primary border border-outline-variant/10 shadow-sm">
-                    ${(item.isRentOnly ? (item.rentPrice || 0) : item.price).toFixed(2)}
+                    ₹{(item.isRentOnly ? (item.rentPrice || 0) : item.price).toFixed(2)}
                     {item.isRentOnly && '/mo'}
                   </span>
                 </div>

@@ -280,8 +280,8 @@ export default function Marketplace() {
               const isFav = favorites.includes(item.id);
               
               const priceDisplay = mode === 'rent'
-                ? `$${(item.rentPrice || item.price).toFixed(2)}`
-                : `$${item.price.toFixed(2)}`;
+                ? `₹${(item.rentPrice || item.price).toFixed(2)}`
+                : `₹${item.price.toFixed(2)}`;
 
               return (
                 <article 
@@ -342,7 +342,7 @@ export default function Marketplace() {
                         </span>
                         {mode === 'buy' && item.rentPrice && (
                           <span className="font-label-sm text-[11px] text-outline-variant mt-1">
-                            or ${item.rentPrice}/month rent
+                            or ₹{item.rentPrice}/month rent
                           </span>
                         )}
                         {mode === 'rent' && item.isRentOnly && (

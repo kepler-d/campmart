@@ -86,7 +86,7 @@ const DEFAULT_MESSAGES = [
     senderAvatar: "https://lh3.googleusercontent.com/aida-public/AB6AXuCddLeL5NGVY9hPMgt2jNXb68b8Wej1lIjzeAC3C63VVLmjsFKhSMjwRLsofh53I1xuYZ8VMKTYCi_IJLB9DkIYec6gPC_PkQ0nYORX3uaq823XNOYc1s7WjJnELCL_LLrmnVaxJMZNXbxv9dTbpWOn2KhEhVVmlWfMTPGQDhEOwKDFMmdQkucmcGwNE3N6oibdlgOUVE1dS1uMva0xBJSpDOAn_vKZS4MoHzYoAR68SlbBxJtBHn6tOQfxFGyNdtXyp7_hCVKVK5I8",
     productContext: {
       title: "Vintage Leather Jacket",
-      price: "$45.00",
+      price: "₹45.00",
       image: "https://lh3.googleusercontent.com/aida-public/AB6AXuD2stOcusiQ6KHp-SqQVhKhfKtb8uiqHfYI4YUAkDxxdmQQG9cytrNPi0QXXYZRRbnbh9uZSDmAH_TAGw52y5xU7iWVIv9vSZ9nOe3IeZW4FyS0bDVnicaEIyjx9-nfJgaX9AZhsTe-ysniCYcWcdN-phWQViSj0bRItqSRwRWrfAWjfraDa347fAH9jeaPapomUQiI1Vyd6FU1Vn61_YfY0bqN-WGqawarnTTWxYFyAnJISo6e_lycHUlI3joGc00AE9hk-3568dS9"
     },
     online: true,
@@ -105,14 +105,14 @@ const DEFAULT_MESSAGES = [
     senderAvatar: "https://lh3.googleusercontent.com/aida-public/AB6AXuA0WBZrHvUilcRJu0qjYYsJjgeCCBa3AwsGDA5vraAy8XJ3UdXsJjeaoBYR5zCN4fpJ3Zt_J_yt1w-wLcw9xbBoTYIc0aPVvr_muO3vUH6QJvyyw0Mrp6SBaGIlKwnhUhvghvrAFZ6jkpVFZskRLe9R9Kr8GdRbILkQK2viyolRz0YbcqlunOBGt0X5Lc23fvVi4XxBDgEwETcQCeP0KXGBNYOS-3_qY9pBnyGp77vEi1QiuY5Bc1G5UNRGMaLYMF2f2lgoUhfxgvAK",
     productContext: {
       title: "MacBook Pro M1 2020",
-      price: "$850.00",
+      price: "₹850.00",
       image: "https://lh3.googleusercontent.com/aida-public/AB6AXuBzckiG-qpY7WkidwL73YJ4uxGLxg9gy0qpOoZ9HUysT7_kyhNlcpSWBXRqFVImltioHuWKVB15XrUK_UfnULCG0Ql_VbJ5r5SjcD2VZ2xXxAPeyH9td4Rs1rbHGYsE2Lk9qubEEBHq0moAzeCwMR_T2minJlJOYS8-nE0_1pve_0ClEffzOkj2iime5nb6Fa5LOyhy5QM1bZRy_TvYMd1_UnaA76rfiJX-9aMNlLmVdvoPDMc0AeSV9jikuPK8WOte7hIYrWaQJczh"
     },
     online: false,
     lastActive: "2h ago",
     messages: [
       { sender: "them", text: "Hello! Is the price negotiable on the MacBook?", time: "Yesterday" },
-      { sender: "me", text: "Hi! I could do $820, but not much lower than that since it has 16GB of RAM.", time: "Yesterday" },
+      { sender: "me", text: "Hi! I could do ₹820, but not much lower than that since it has 16GB of RAM.", time: "Yesterday" },
       { sender: "them", text: "Is the monitor still available?", time: "2h ago" }
     ]
   },
@@ -122,7 +122,7 @@ const DEFAULT_MESSAGES = [
     senderAvatar: "",
     productContext: {
       title: "Mesh Office Chair",
-      price: "$60.00",
+      price: "₹60.00",
       image: "https://lh3.googleusercontent.com/aida-public/AB6AXuCIZYdnOcuujHPRYidfLxYGjIMeKcvEvIktVnpU9jGcjnyZzrJsDbx0YbGXOYro7ZQhVIJGJ4Tlf-YsWnF0DKCkGTogI3_iJwLBGOlpEnZ46D_lQhquVbBs24Jf6VBznP8Okm21iuLgtCxbaQgj1uITXyuYBPxpfbnwsJcWHlaD1bcjt1a3mLKsAnpnPCQwP6KySBCcJ5bicGrTjiUSULYi1_any7Kx3SLC4kt97YPWotjuROcdlLMEP2U9Cq-eli-T9FCiyudI_foA"
     },
     online: false,

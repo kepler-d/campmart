@@ -139,7 +139,7 @@ export default function Admin() {
           </div>
           <div className="relative z-10">
             <p className="font-label-md text-label-md text-on-surface-variant mb-1">Platform Revenue</p>
-            <h3 className="font-headline-lg text-headline-lg font-bold text-on-surface font-black">$24.5k</h3>
+            <h3 className="font-headline-lg text-headline-lg font-bold text-on-surface font-black">₹24.5k</h3>
           </div>
         </div>
 

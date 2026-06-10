@@ -238,7 +238,7 @@ export default function Dashboard() {
           </div>
           <div>
             <p className="text-[12px] font-bold text-on-surface-variant uppercase tracking-wider">Sales Made</p>
-            <h3 className="text-2xl font-black text-on-surface mt-0.5">${salesMadeTotal.toFixed(2)}</h3>
+            <h3 className="text-2xl font-black text-on-surface mt-0.5">₹{salesMadeTotal.toFixed(2)}</h3>
           </div>
         </div>
 
@@ -299,7 +299,7 @@ export default function Dashboard() {
                     <div>
                       <h4 className="font-headline-md text-sm font-bold text-on-surface line-clamp-1">{item.title}</h4>
                       <p className="font-body-md text-xs text-on-surface-variant mt-0.5">
-                        {item.category} • <span className="text-primary font-semibold">${item.price.toFixed(2)}</span>
+                        {item.category} • <span className="text-primary font-semibold">₹{item.price.toFixed(2)}</span>
                       </p>
                       <div className="flex gap-2 mt-2">
                         <span className="text-[10px] font-bold uppercase tracking-wider text-secondary bg-secondary-container/20 px-2 py-0.5 rounded">
@@ -421,7 +421,7 @@ export default function Dashboard() {
                     {item.title}
                   </Link>
                   <p className="font-headline-md text-sm font-black text-primary mt-2">
-                    ${item.price.toFixed(2)}
+                    ₹{item.price.toFixed(2)}
                   </p>
                 </div>
               </article>
@@ -462,7 +462,7 @@ export default function Dashboard() {
                     {item.title}
                   </h4>
                   <p className="font-headline-md text-sm font-black text-primary mt-2">
-                    ${item.price.toFixed(2)}
+                    ₹{item.price.toFixed(2)}
                   </p>
                 </div>
               </article>
@@ -480,7 +480,7 @@ export default function Dashboard() {
               <p className="font-body-md text-sm text-on-surface-variant mt-1 truncate">{editItemTitle}</p>
             </div>
             <div className="relative">
-              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-outline font-bold">$</span>
+              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-outline font-bold">₹</span>
               <input 
                 type="number" 
                 min="0" 

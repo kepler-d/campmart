@@ -89,7 +89,7 @@ export default function LandingPage() {
                 </div>
                 <div>
                   <p className="font-label-sm text-label-sm text-on-surface mb-0.5">New Listing</p>
-                  <p className="text-xs font-semibold text-secondary-fixed-dim">$45 • Textbook</p>
+                  <p className="text-xs font-semibold text-secondary-fixed-dim">₹45 • Textbook</p>
                 </div>
               </div>
             </div>

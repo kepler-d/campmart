@@ -96,11 +96,11 @@ export default function CreateListing() {
 
   // Calculate pricing elements for preview card
   const priceDisplay = rentOnly
-    ? `$${(parseFloat(rentPrice) || 0).toFixed(2)}`
-    : `$${(parseFloat(price) || 0).toFixed(2)}`;
+    ? `₹${(parseFloat(rentPrice) || 0).toFixed(2)}`
+    : `₹${(parseFloat(price) || 0).toFixed(2)}`;
 
   const secondaryPriceText = (!rentOnly && rentPrice)
-    ? `or $${parseFloat(rentPrice).toFixed(0)}/month rent`
+    ? `or ₹${parseFloat(rentPrice).toFixed(0)}/month rent`
     : '';
 
   return (
@@ -286,7 +286,7 @@ export default function CreateListing() {
                   <h2 className="font-headline-md text-headline-md mb-md">3. Pricing Options</h2>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-md">
                     <div>
-                      <label className="block font-label-md text-label-md text-on-surface mb-xs font-semibold">Purchase Price ($)</label>
+                      <label className="block font-label-md text-label-md text-on-surface mb-xs font-semibold">Purchase Price (₹)</label>
                       <input 
                         type="number" 
                         required={!rentOnly}
@@ -300,7 +300,7 @@ export default function CreateListing() {
                       />
                     </div>
                     <div>
-                      <label className="block font-label-md text-label-md text-on-surface mb-xs font-semibold">Rent Price ($/month, optional)</label>
+                      <label className="block font-label-md text-label-md text-on-surface mb-xs font-semibold">Rent Price (₹/month, optional)</label>
                       <input 
                         type="number" 
                         min="0" 
