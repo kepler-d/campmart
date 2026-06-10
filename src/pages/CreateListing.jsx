@@ -17,6 +17,7 @@ export default function CreateListing() {
   // State parameters
   const [title, setTitle] = useState('');
   const [category, setCategory] = useState('Electronics');
+  const [customCategory, setCustomCategory] = useState('');
   const [condition, setCondition] = useState('Good');
   const [desc, setDesc] = useState('');
   const [price, setPrice] = useState('120.00');
@@ -54,7 +55,7 @@ export default function CreateListing() {
     const newListing = {
       id: `lst-${Date.now()}`,
       title: title || 'Untitled Listing',
-      category: category,
+      category: category === 'Other' ? (customCategory.trim() || 'Other') : category,
       price: rentOnly ? 0 : (isNaN(buyPrice) ? 0 : buyPrice),
       rentPrice: isNaN(rentalPrice) ? undefined : rentalPrice,
       isRentOnly: rentOnly || undefined,
@@ -221,7 +222,12 @@ export default function CreateListing() {
                       <div className="relative">
                         <select 
                           value={category}
-                          onChange={(e) => setCategory(e.target.value)}
+                          onChange={(e) => {
+                            setCategory(e.target.value);
+                            if (e.target.value !== 'Other') {
+                              setCustomCategory('');
+                            }
+                          }}
                           className="w-full rounded-lg border border-outline-variant bg-surface-container-lowest px-md py-3 text-body-md font-body-md appearance-none outline-none cursor-pointer"
                         >
                           <option value="Textbooks">Textbooks</option>
@@ -232,6 +238,18 @@ export default function CreateListing() {
                         </select>
                         <span className="material-symbols-outlined absolute right-md top-1/2 -translate-y-1/2 text-outline pointer-events-none">expand_more</span>
                       </div>
+                      {category === 'Other' && (
+                        <div className="mt-sm">
+                          <input 
+                            required
+                            type="text"
+                            placeholder="Specify category (e.g. Sports, Art, Vehicles)"
+                            value={customCategory}
+                            onChange={(e) => setCustomCategory(e.target.value)}
+                            className="w-full rounded-lg border border-outline-variant bg-surface-container-lowest px-md py-2.5 text-body-md font-body-md outline-none focus:border-primary placeholder-outline-variant/60"
+                          />
+                        </div>
+                      )}
                     </div>
                     <div>
                       <label className="block font-label-md text-label-md text-on-surface mb-xs font-semibold">Condition</label>
@@ -358,7 +376,7 @@ export default function CreateListing() {
               <div className="p-4 flex flex-col flex-grow">
                 <div className="flex justify-between items-start gap-sm mb-1">
                   <span className="text-[11px] font-bold uppercase tracking-wider text-secondary">
-                    {category}
+                    {category === 'Other' ? (customCategory || 'Other') : category}
                   </span>
                   <div className="flex items-center text-outline text-[12px]">
                     <span className="material-symbols-outlined text-[14px] icon-fill text-tertiary-fixed-dim mr-0.5">star</span>

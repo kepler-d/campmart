@@ -88,7 +88,10 @@ export default function Marketplace() {
 
     // 3. Category filter
     if (selectedCategories.length > 0) {
-      if (!selectedCategories.includes(item.category)) return false;
+      const standardCategories = ['Textbooks', 'Electronics', 'Furniture', 'Apparel'];
+      const matchesStandard = selectedCategories.includes(item.category);
+      const matchesOther = selectedCategories.includes('Other') && !standardCategories.includes(item.category);
+      if (!matchesStandard && !matchesOther) return false;
     }
 
     // 4. Price range filter
