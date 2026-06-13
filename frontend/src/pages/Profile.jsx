@@ -6,8 +6,16 @@ export default function Profile() {
   const navigate = useNavigate();
 
   // Load from database
-  const [profile, setProfile] = useState(getProfile());
-  const [listings, setListings] = useState(getListings());
+  const [profile, setProfile] = useState({});
+  const [listings, setListings] = useState([]);
+
+  useEffect(() => {
+    const fetchInitialData = async () => {
+      setProfile(await getProfile());
+      setListings(await getListings());
+    };
+    fetchInitialData();
+  }, []);
 
   // Edit profile states
   const [showEditModal, setShowEditModal] = useState(false);
@@ -18,8 +26,8 @@ export default function Profile() {
 
   // Sync profile & listings internally
   useEffect(() => {
-    const handleProfileChange = () => setProfile(getProfile());
-    const handleListingsUpdate = () => setListings(getListings());
+    const handleProfileChange = async () => setProfile(await getProfile());
+    const handleListingsUpdate = async () => setListings(await getListings());
 
     window.addEventListener('profileChanged', handleProfileChange);
     window.addEventListener('listingsUpdated', handleListingsUpdate);
@@ -38,7 +46,7 @@ export default function Profile() {
     setShowEditModal(true);
   };
 
-  const handleSaveProfile = (e) => {
+  const handleSaveProfile = async (e) => {
     e.preventDefault();
     const updated = {
       ...profile,
@@ -49,7 +57,7 @@ export default function Profile() {
     };
 
     setProfile(updated);
-    saveProfile(updated);
+    await saveProfile(updated);
     setShowEditModal(false);
   };
 

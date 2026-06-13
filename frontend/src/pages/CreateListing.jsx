@@ -43,11 +43,11 @@ export default function CreateListing() {
     setImageUrl(RANDOM_IMAGES[randomIndex]);
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const listings = getListings();
-    const profile = getProfile();
+    const listings = await getListings();
+    const profile = await getProfile();
 
     const buyPrice = parseFloat(price);
     const rentalPrice = parseFloat(rentPrice);
@@ -70,14 +70,14 @@ export default function CreateListing() {
 
     // Prepend new listing to lists
     listings.unshift(newListing);
-    saveListings(listings);
+    await saveListings(listings);
 
     // Update profile listings count
     const updatedProfile = {
       ...profile,
       listingsCount: (profile.listingsCount || 0) + 1
     };
-    saveProfile(updatedProfile);
+    await saveProfile(updatedProfile);
 
     alert(`Successfully listed "${newListing.title}"! Redirecting to marketplace.`);
     navigate('/marketplace');

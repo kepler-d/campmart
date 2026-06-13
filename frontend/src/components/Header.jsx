@@ -3,7 +3,7 @@ import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { getProfile } from '../db';
 
 export default function Header() {
-  const [profile, setProfile] = useState(getProfile());
+  const [profile, setProfile] = useState({});
   const [isLoggedIn, setIsLoggedIn] = useState(localStorage.getItem('is_logged_in') === 'true');
   const [searchVal, setSearchVal] = useState('');
   const [isDarkMode, setIsDarkMode] = useState(false);
@@ -11,10 +11,11 @@ export default function Header() {
   const location = useLocation();
 
   useEffect(() => {
-    const syncAuth = () => {
+    const syncAuth = async () => {
       setIsLoggedIn(localStorage.getItem('is_logged_in') === 'true');
-      setProfile(getProfile());
+      setProfile(await getProfile());
     };
+    syncAuth();
     window.addEventListener('authChanged', syncAuth);
     window.addEventListener('profileChanged', syncAuth);
     return () => {

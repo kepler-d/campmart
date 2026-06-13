@@ -7,8 +7,16 @@ export default function Marketplace() {
   const navigate = useNavigate();
 
   // Load from db
-  const [listings, setListings] = useState(getListings());
-  const [favorites, setFavorites] = useState(getFavorites());
+  const [listings, setListings] = useState([]);
+  const [favorites, setFavorites] = useState([]);
+
+  useEffect(() => {
+    const fetchInitialData = async () => {
+      setListings(await getListings());
+      setFavorites(await getFavorites());
+    };
+    fetchInitialData();
+  }, []);
 
   // Filter state variables
   const [mode, setMode] = useState('buy');
@@ -30,8 +38,8 @@ export default function Marketplace() {
 
   // Sync changes to listings or favorites across pages
   useEffect(() => {
-    const handleListingsUpdate = () => setListings(getListings());
-    const handleFavoritesUpdate = () => setFavorites(getFavorites());
+    const handleListingsUpdate = async () => setListings(await getListings());
+    const handleFavoritesUpdate = async () => setFavorites(await getFavorites());
 
     window.addEventListener('listingsUpdated', handleListingsUpdate);
     window.addEventListener('favoritesUpdated', handleFavoritesUpdate);
@@ -42,10 +50,10 @@ export default function Marketplace() {
     };
   }, []);
 
-  const handleFavoriteToggle = (id, e) => {
+  const handleFavoriteToggle = async (id, e) => {
     e.preventDefault();
     e.stopPropagation();
-    toggleFavorite(id);
+    await toggleFavorite(id);
   };
 
   const handleResetFilters = () => {

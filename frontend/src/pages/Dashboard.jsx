@@ -6,7 +6,7 @@ const DEFAULT_RENTALS = [
   {
     id: "rnt-1",
     title: "Wacom Intuos Pro Drawing Tablet",
-    image: "https://lh3.googleusercontent.com/aida-public/AB6AXuAiKF-D4yzQGV6u_iWTPq1w05BoQwD9EiZV_NzMrU1BJFVFT9b9BrFsKkjID92vD8rx6qHEK1XaLqaqwZFcW1TAHSypCVZvNu0GLFXzAmQpGuwE2gRMf4rjhj92AGOtFugNalqQ2m3YtmE5lYkqmC5bWqmDUH_o0yPAUwdiGvimfrwatXzvzXW7YAnRuYoHlo2gyZSSfh5nW9SpESQIrQyk0C06dBjfyrwN6pTb_vBBzbWTWmvH-6zQOCn7zsjO3NCSM3FllN-pmLdw",
+    image: "https://api.dicebear.com/7.x/adventurer/svg?seed=m97y3e",
     type: "borrowed",
     partner: "Sarah Jenkins",
     dueDate: "2026-06-15",
@@ -16,7 +16,7 @@ const DEFAULT_RENTALS = [
   {
     id: "rnt-2",
     title: "Calculus: Early Transcendentals, 9th Edition",
-    image: "https://lh3.googleusercontent.com/aida-public/AB6AXuBA8hiRQWq9w5PRkjiI8Do0vyV-ZWZPH983o5oxbh0glCUD159_cwHrSCouXmUcF1Kpp7_3ZdfmgGjJd8VnEh-n2TVX2OiWRCSrMnoLjN8Q--AurQfAyxCX2faMgtrXFJJmkeAMAei87ySLGdbzDFS9lmX4J_YO0UWgIuZ2QK5EsqKUbL3L_aWRf5MtusuVk27HGRF-3wjPzzYiNe6UYHrzOU-Zif2NbiQIbTCSwhibXqVzYKnCy4cbim5c67OZ1rxwUu7zhmoCCm6v",
+    image: "https://api.dicebear.com/7.x/adventurer/svg?seed=3714rh",
     type: "lent",
     partner: "Alex Chen",
     dueDate: "2026-06-25",
@@ -29,9 +29,9 @@ export default function Dashboard() {
   const navigate = useNavigate();
 
   // Load profile and listings
-  const [profile, setProfile] = useState(getProfile());
-  const [listings, setListings] = useState(getListings());
-  const [favorites, setFavorites] = useState(getFavorites());
+  const [profile, setProfile] = useState({});
+  const [listings, setListings] = useState([]);
+  const [favorites, setFavorites] = useState([]);
   const [rentals, setRentals] = useState([]);
 
   // Modal State
@@ -42,69 +42,77 @@ export default function Dashboard() {
 
   // Initial Seed & Load
   useEffect(() => {
-    // 1. Seed user listings if empty
-    const currentListings = getListings();
-    const userOwned = currentListings.filter(item => item.seller === profile.name);
-    if (userOwned.length === 0) {
-      const mockListings = [
-        {
-          id: "lst-h1",
-          title: "Introduction to Algorithms (CLRS), 4th Edition",
-          category: "Textbooks",
-          price: 65.00,
-          condition: "Like New",
-          rating: 4.9,
-          image: "https://lh3.googleusercontent.com/aida-public/AB6AXuBA8hiRQWq9w5PRkjiI8Do0vyV-ZWZPH983o5oxbh0glCUD159_cwHrSCouXmUcF1Kpp7_3ZdfmgGjJd8VnEh-n2TVX2OiWRCSrMnoLjN8Q--AurQfAyxCX2faMgtrXFJJmkeAMAei87ySLGdbzDFS9lmX4J_YO0UWgIuZ2QK5EsqKUbL3L_aWRf5MtusuVk27HGRF-3wjPzzYiNe6UYHrzOU-Zif2NbiQIbTCSwhibXqVzYKnCy4cbim5c67OZ1rxwUu7zhmoCCm6v",
-          seller: profile.name,
-          sellerAvatar: profile.avatar,
-          description: "Used for CS 301. Minimal markings, like new condition. Can deliver on campus."
-        },
-        {
-          id: "lst-h2",
-          title: "TI-84 Plus CE Graphing Calculator",
-          category: "Electronics",
-          price: 85.00,
-          rentPrice: 10.00,
-          condition: "Good",
-          rating: 5.0,
-          image: "https://lh3.googleusercontent.com/aida-public/AB6AXuBzckiG-qpY7WkidwL73YJ4uxGLxg9gy0qpOoZ9HUysT7_kyhNlcpSWBXRqFVImltioHuWKVB15XrUK_UfnULCG0Ql_VbJ5r5SjcD2VZ2xXxAPeyH9td4Rs1rbHGYsE2Lk9qubEEBHq0moAzeCwMR_T2minJlJOYS8-nE0_1pve_0ClEffzOkj2iime5nb6Fa5LOyhy5QM1bZRy_TvYMd1_UnaA76rfiJX-9aMNlLmVdvoPDMc0AeSV9jikuPK8WOte7hIYrWaQJczh",
-          seller: profile.name,
-          sellerAvatar: profile.avatar,
-          description: "Calculator in great working condition. Includes charger."
-        },
-        {
-          id: "lst-h3",
-          title: "Computer Science Study Desk Lamp",
-          category: "Furniture",
-          price: 15.00,
-          condition: "Fair",
-          rating: 4.0,
-          image: "https://lh3.googleusercontent.com/aida-public/AB6AXuCIZYdnOcuujHPRYidfLxYGjIMeKcvEvIktVnpU9jGcjnyZzrJsDbx0YbGXOYro7ZQhVIJGJ4Tlf-YsWnF0DKCkGTogI3_iJwLBGOlpEnZ46D_lQhquVbBs24Jf6VBznP8Okm21iuLgtCxbaQgj1uITXyuYBPxpfbnwsJcWHlaD1bcjt1a3mLKsAnpnPCQwP6KySBCcJ5bicGrTjiUSULYi1_any7Kx3SLC4kt97YPWotjuROcdlLMEP2U9Cq-eli-T9FCiyudI_foA",
-          seller: profile.name,
-          sellerAvatar: profile.avatar,
-          description: "Basic desk lamp. Works fine, bulb included."
-        }
-      ];
-      const combined = [...mockListings, ...currentListings];
-      saveListings(combined);
-      setListings(combined);
-    }
+    const fetchData = async () => {
+      const p = await getProfile();
+      setProfile(p);
+      const l = await getListings();
+      setListings(l);
+      setFavorites(await getFavorites());
 
-    // 2. Load rentals from storage or seed
-    const savedRentals = localStorage.getItem("campus_rentals");
-    if (!savedRentals) {
-      localStorage.setItem("campus_rentals", JSON.stringify(DEFAULT_RENTALS));
-      setRentals(DEFAULT_RENTALS);
-    } else {
-      setRentals(JSON.parse(savedRentals));
-    }
-  }, [profile.name, profile.avatar]);
+      // 1. Seed user listings if empty
+      const userOwned = l.filter(item => item.seller === p.name);
+      if (userOwned.length === 0 && p.name) {
+        const mockListings = [
+          {
+            id: "lst-h1",
+            title: "Introduction to Algorithms (CLRS), 4th Edition",
+            category: "Textbooks",
+            price: 65.00,
+            condition: "Like New",
+            rating: 4.9,
+            image: "https://images.unsplash.com/photo-1588580000645-4562a6d2c839?auto=format&fit=crop&w=400",
+            seller: p.name,
+            sellerAvatar: p.avatar,
+            description: "Used for CS 301. Minimal markings, like new condition. Can deliver on campus."
+          },
+          {
+            id: "lst-h2",
+            title: "TI-84 Plus CE Graphing Calculator",
+            category: "Electronics",
+            price: 85.00,
+            rentPrice: 10.00,
+            condition: "Good",
+            rating: 5.0,
+            image: "https://images.unsplash.com/photo-1611078776822-0d1fc0d1d231?auto=format&fit=crop&w=400",
+            seller: p.name,
+            sellerAvatar: p.avatar,
+            description: "Calculator in great working condition. Includes charger."
+          },
+          {
+            id: "lst-h3",
+            title: "Computer Science Study Desk Lamp",
+            category: "Furniture",
+            price: 15.00,
+            condition: "Fair",
+            rating: 4.0,
+            image: "https://images.unsplash.com/photo-1513506003901-1e6a229e2d15?auto=format&fit=crop&w=400",
+            seller: p.name,
+            sellerAvatar: p.avatar,
+            description: "Basic desk lamp. Works fine, bulb included."
+          }
+        ];
+        const combined = [...mockListings, ...l];
+        await saveListings(combined);
+        setListings(combined);
+      }
+
+      // 2. Load rentals from storage or seed
+      const savedRentals = localStorage.getItem("campus_rentals");
+      if (!savedRentals) {
+        localStorage.setItem("campus_rentals", JSON.stringify(DEFAULT_RENTALS));
+        setRentals(DEFAULT_RENTALS);
+      } else {
+        setRentals(JSON.parse(savedRentals));
+      }
+    };
+    fetchData();
+  }, []);
 
   // Sync state on dynamic updates
   useEffect(() => {
-    const handleProfileChange = () => setProfile(getProfile());
-    const handleListingsUpdate = () => setListings(getListings());
-    const handleFavoritesUpdate = () => setFavorites(getFavorites());
+    const handleProfileChange = async () => setProfile(await getProfile());
+    const handleListingsUpdate = async () => setListings(await getListings());
+    const handleFavoritesUpdate = async () => setFavorites(await getFavorites());
 
     window.addEventListener('profileChanged', handleProfileChange);
     window.addEventListener('listingsUpdated', handleListingsUpdate);
@@ -182,8 +190,8 @@ export default function Dashboard() {
     }
   };
 
-  const handleUnfavorite = (id) => {
-    toggleFavorite(id);
+  const handleUnfavorite = async (id) => {
+    await toggleFavorite(id);
   };
 
   // Sales Made estimate

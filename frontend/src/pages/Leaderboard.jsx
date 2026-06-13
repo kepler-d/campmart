@@ -40,7 +40,7 @@ export default function Leaderboard() {
             <span className="material-symbols-outlined text-[120px]">military_tech</span>
           </div>
           <div className="w-20 h-20 rounded-full bg-surface-container ring-4 ring-outline-variant/50 relative mb-md z-10">
-            <img alt="Sarah J." className="w-full h-full rounded-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCexYARnONI621h8-cCKPXWwtXF2DREXfPUT9a6UCtqBtt1-WpcpoS4bE8E5cdxGTxvW3e9G_m-ebYu_Rnc_OgjUKkeD788mIaCconmCx4A3axQveXBuRdK_Ha_6asPCK1nWQ4jQanlQQczw-uphZm1IDUQjq9S5Z4C_u_GE3TXah9PwhL9TWC-aA6DWBsVNbsSqLORn2Snf3N8ZgWGyefmzok5LOWVMtZuycH3JgL0aOaWoO_enLEipq7Net3c5KxWtIWhE8XFwRHy"/>
+            <img alt="Sarah J." className="w-full h-full rounded-full object-cover" src="https://api.dicebear.com/7.x/adventurer/svg?seed=zjl6v"/>
             <div className="absolute -bottom-2 -right-2 bg-surface-container-highest text-on-surface font-label-sm text-label-sm w-8 h-8 flex items-center justify-center rounded-full border-2 border-white shadow-sm font-bold">#2</div>
           </div>
           <h3 className="font-headline-md text-headline-md text-on-surface z-10 font-bold">Sarah J.</h3>
@@ -60,7 +60,7 @@ export default function Leaderboard() {
             <span className="material-symbols-outlined text-[180px] icon-fill">emoji_events</span>
           </div>
           <div className="w-28 h-28 rounded-full bg-surface-container ring-4 ring-primary relative mb-md z-10">
-            <img alt="Marcus T." className="w-full h-full rounded-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDWv2qtGn3FoJvIAxJA8moar1Y-IUx5wiWqI9z7awoWG7oB1IRmk6ZPHvVi2Y1Jomyrm6hfe0SaKn2nFsJLs7xosHGm4OtEDQ8XSasLow8baleUrRIY1TWM8z84MfGxd8zkI8jqPTi_nJ2uxOcxXQfRhZEGZNwN7vMfT9ePlSM1fXHNjlj6Mrkx-j3QYucyC5hXe-85q-jeKp6Ke0dcwCqjf9VH4dw8JXMWBUtrse3OxpaRJr-h3cgPiM3UJwFwuK-SlgIOiS-eGknY"/>
+            <img alt="Marcus T." className="w-full h-full rounded-full object-cover" src="https://api.dicebear.com/7.x/adventurer/svg?seed=lvcc5w"/>
             <div className="absolute -bottom-2 -right-2 bg-primary text-on-primary font-label-sm text-label-sm w-10 h-10 flex items-center justify-center rounded-full border-2 border-white shadow-md font-bold">#1</div>
           </div>
           <h3 className="font-headline-md text-headline-md text-on-surface font-black z-10">Marcus T.</h3>
@@ -81,7 +81,7 @@ export default function Leaderboard() {
             <span className="material-symbols-outlined text-[120px]">workspace_premium</span>
           </div>
           <div className="w-20 h-20 rounded-full bg-surface-container ring-4 ring-tertiary-fixed-dim/50 relative mb-md z-10">
-            <img alt="David L." className="w-full h-full rounded-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA7r3sr4auDYZPTXWUHfpfX9iy2bGyysmsIKbPld6rUSCBJz7eCrpwbZtzD1Gw0k-CjfW9EZdRH37XOWgW8hwQ-_HjmAu77BBk3fIv_n2H5WF4c0CKV0Ofjce_JKM6Lpwwu9AjRwvg-grn2oSjiiDLJjBq8Uph1hW4XedPJ6xrn2VeJYFrJKZENn3rFHfmHMJB741vTpuHm7pp_MQGmjKYJlE5RAYDc-B5gut_57CGFEBJ8p3QVWYwVHS1Cj6dU5c4VAyUMRJnWwTn5"/>
+            <img alt="David L." className="w-full h-full rounded-full object-cover" src="https://api.dicebear.com/7.x/adventurer/svg?seed=st2gms"/>
             <div className="absolute -bottom-2 -right-2 bg-surface-container-highest text-on-surface font-label-sm text-label-sm w-8 h-8 flex items-center justify-center rounded-full border-2 border-white shadow-sm font-bold">#3</div>
           </div>
           <h3 className="font-headline-md text-headline-md text-on-surface z-10 font-bold">David L.</h3>
@@ -114,7 +114,7 @@ export default function Leaderboard() {
             <div className="flex items-center gap-md">
               <span className="font-headline-md text-headline-md text-outline font-bold w-8 text-center group-hover:text-primary transition-colors">4</span>
               <div className="w-12 h-12 rounded-full overflow-hidden bg-surface-container">
-                <img alt="Emma W." className="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC1eWQBMbpFgKa5VIOyj3Q_po1muggSMFeuUam9tLy4jehEJWY0BdEVFvb2H86Q7oXCVP5rLHXopKtkGfAyl9MG6XieyYOw8gRaj0qkukb9fHz4SQY2Q8kqtoQo77EA-39AIxq3Ve3WxI4sX0zZ-GJYQcq2D9K6ShZZedSXmCGNPotuITh00b3dVD247uR5VAWNVl7zam7__U84zlsRxhlx92Pqj5YybmbSUDGnb3BmHxdCljeO8FAc3j8U3LEjKseXhi__HALAf-9H"/>
+                <img alt="Emma W." className="w-full h-full object-cover" src="https://api.dicebear.com/7.x/adventurer/svg?seed=cw4uxj"/>
               </div>
               <div>
                 <p className="font-label-md text-label-md font-semibold text-on-surface">Emma W.</p>
@@ -154,7 +154,7 @@ export default function Leaderboard() {
             <div className="flex items-center gap-md">
               <span className="font-headline-md text-headline-md text-outline font-bold w-8 text-center group-hover:text-primary transition-colors">6</span>
               <div className="w-12 h-12 rounded-full overflow-hidden bg-surface-container">
-                <img alt="Michael B." className="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuANqw4L_kK-Ycv3hVnizAWtiu6wS2bXhNinGaIFj2KPK5jNXz5dW1YlAhmLcdEOz8GcBBho2rbA4PLsTgfVjN0uwdegk1oYat8uJUD3_GiKiITZHaAPfkBRobg5XhCiXpu0xwDT0C4qkKaDjSa73B7H98aNlVGbahhqvwQAcO4wf4bCAJbcCbamo2xEdkyovPI6iGTD61bu-kYpWPjYA0TAFheVYHt8teo8zzC0NLjEA6bsRg5xAjqa8VlU7hsDO5lhaXjgo5mixq3o"/>
+                <img alt="Michael B." className="w-full h-full object-cover" src="https://api.dicebear.com/7.x/adventurer/svg?seed=y39q5l"/>
               </div>
               <div>
                 <p className="font-label-md text-label-md font-semibold text-on-surface">Michael B.</p>

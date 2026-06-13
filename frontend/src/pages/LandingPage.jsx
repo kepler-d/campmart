@@ -69,7 +69,7 @@ export default function LandingPage() {
               <img 
                 alt="Students exchanging electronics" 
                 className="w-full h-full object-cover" 
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuAthbfPQ8Bompef8vN7NIQH_ahiKOHCkIuvRTXYlURCY7erCPHizUFioPYs5Z10rEBELs7Uilu7T0RxiLrpYmPsWpOq46I_4vk9INjfqDsae1tg7NxMN3jP8AeE8xsmCSIXIjrrCalo6Tag9G9etpwT1xU7kfMcW_nYQv01sordB1YVZuOwkf2j2HDPy0ThE6lO9xc_DKswQZsLUBQVNOxwYDXPFOqzJ5o-apvl2VmO48fyTwrP6r5toQ7JP_mJUoHXizbATzRQ5cAU"
+                src="https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&w=800"
               />
               
               {/* Floating Glass Panels */}

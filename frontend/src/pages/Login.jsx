@@ -33,7 +33,7 @@ export default function Login() {
         major: "Computer Science",
         year: "4th Year",
         email: "hardik@university.edu",
-        avatar: "https://lh3.googleusercontent.com/aida-public/AB6AXuBwozUBToAeWm6qEAFt4XpKTKQvJVko-_u9NhR9mUQpKXAy9c2payVVkBjnDI90kfoyEki07Rro02oX02iytGaoYmn0Ej6DETSil0VE-Sj6nJvg-XP4YKXjRAGkTobHlnEdMM4TrFNLy0A4XvQRDVpYGl84ocnA5aZlpNMwbgvfrZHLbCMcm67T2pPU0f0f9uyuE0o5WKpFxjI0NjyUv7POLY5Y55bEfr5Z4yzT5hTi0B419ePRJori6c39wesX8XLchKTKxUxWGXdM",
+        avatar: "https://api.dicebear.com/7.x/adventurer/svg?seed=bbnm8e",
         rating: 4.9,
         rank: 12,
         points: 1540,
@@ -42,12 +42,13 @@ export default function Login() {
         purchasedCount: 14,
         isAdmin: true
       };
-      saveProfile(adminProfile);
-      localStorage.setItem('is_logged_in', 'true');
-      window.dispatchEvent(new Event('authChanged'));
-      window.dispatchEvent(new Event('profileChanged'));
-      setIsLoading(false);
-      navigate('/marketplace');
+      saveProfile(adminProfile).then(() => {
+        localStorage.setItem('is_logged_in', 'true');
+        window.dispatchEvent(new Event('authChanged'));
+        window.dispatchEvent(new Event('profileChanged'));
+        setIsLoading(false);
+        navigate('/marketplace');
+      });
     }, 600);
   };
 
@@ -73,12 +74,13 @@ export default function Login() {
         purchasedCount: 5,
         isAdmin: false
       };
-      saveProfile(userProfile);
-      localStorage.setItem('is_logged_in', 'true');
-      window.dispatchEvent(new Event('authChanged'));
-      window.dispatchEvent(new Event('profileChanged'));
-      setIsLoading(false);
-      navigate('/marketplace');
+      saveProfile(userProfile).then(() => {
+        localStorage.setItem('is_logged_in', 'true');
+        window.dispatchEvent(new Event('authChanged'));
+        window.dispatchEvent(new Event('profileChanged'));
+        setIsLoading(false);
+        navigate('/marketplace');
+      });
     }, 600);
   };
 
@@ -110,10 +112,10 @@ export default function Login() {
     setIsLoading(true);
 
     // Simulate mock login api delay
-    setTimeout(() => {
+    setTimeout(async () => {
       if (mode === 'login') {
         // Mock authentication success
-        const currentProfile = getProfile();
+        const currentProfile = await getProfile();
         const isDemoAdmin = email.toLowerCase().trim() === 'hardik@university.edu';
         const isDemoUser = email.toLowerCase().trim() === 'student@university.edu';
         
@@ -129,7 +131,7 @@ export default function Login() {
             name: "Hardik",
             major: "Computer Science",
             year: "4th Year",
-            avatar: "https://lh3.googleusercontent.com/aida-public/AB6AXuBwozUBToAeWm6qEAFt4XpKTKQvJVko-_u9NhR9mUQpKXAy9c2payVVkBjnDI90kfoyEki07Rro02oX02iytGaoYmn0Ej6DETSil0VE-Sj6nJvg-XP4YKXjRAGkTobHlnEdMM4TrFNLy0A4XvQRDVpYGl84ocnA5aZlpNMwbgvfrZHLbCMcm67T2pPU0f0f9uyuE0o5WKpFxjI0NjyUv7POLY5Y55bEfr5Z4yzT5hTi0B419ePRJori6c39wesX8XLchKTKxUxWGXdM",
+            avatar: "https://api.dicebear.com/7.x/adventurer/svg?seed=nd0e03e",
             rating: 4.9,
             rank: 12,
             points: 1540,
@@ -155,7 +157,7 @@ export default function Login() {
           };
         }
         
-        saveProfile(updatedProfile);
+        await saveProfile(updatedProfile);
         localStorage.setItem('is_logged_in', 'true');
         window.dispatchEvent(new Event('authChanged'));
         window.dispatchEvent(new Event('profileChanged'));
@@ -178,7 +180,7 @@ export default function Login() {
           isAdmin: false
         };
 
-        saveProfile(newProfile);
+        await saveProfile(newProfile);
         localStorage.setItem('is_logged_in', 'true');
         window.dispatchEvent(new Event('authChanged'));
         window.dispatchEvent(new Event('profileChanged'));

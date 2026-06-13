@@ -7,8 +7,16 @@ export default function ProductDetails() {
   const navigate = useNavigate();
 
   // Load state
-  const [listings, setListings] = useState(getListings());
-  const [favorites, setFavorites] = useState(getFavorites());
+  const [listings, setListings] = useState([]);
+  const [favorites, setFavorites] = useState([]);
+
+  useEffect(() => {
+    const fetchInitialData = async () => {
+      setListings(await getListings());
+      setFavorites(await getFavorites());
+    };
+    fetchInitialData();
+  }, []);
 
   // Find active product
   const product = listings.find(item => item.id === id);
@@ -19,8 +27,8 @@ export default function ProductDetails() {
   }, [id]);
 
   useEffect(() => {
-    const handleListingsUpdate = () => setListings(getListings());
-    const handleFavoritesUpdate = () => setFavorites(getFavorites());
+    const handleListingsUpdate = async () => setListings(await getListings());
+    const handleFavoritesUpdate = async () => setFavorites(await getFavorites());
 
     window.addEventListener('listingsUpdated', handleListingsUpdate);
     window.addEventListener('favoritesUpdated', handleFavoritesUpdate);
@@ -51,8 +59,8 @@ export default function ProductDetails() {
 
   const isFav = favorites.includes(product.id);
 
-  const handleFavoriteClick = () => {
-    toggleFavorite(product.id);
+  const handleFavoriteClick = async () => {
+    await toggleFavorite(product.id);
   };
 
   const handleBuyClick = () => {
@@ -63,8 +71,8 @@ export default function ProductDetails() {
     alert(`Starting rental process for "${product.title}".`);
   };
 
-  const handleMessageClick = () => {
-    const threads = getMessages();
+  const handleMessageClick = async () => {
+    const threads = await getMessages();
     // Check if thread already exists for this seller
     let thread = threads.find(t => t.senderName === product.seller);
     if (!thread) {
@@ -87,7 +95,7 @@ export default function ProductDetails() {
         ]
       };
       threads.unshift(thread);
-      saveMessages(threads);
+      await saveMessages(threads);
     }
     // Redirect to messages page
     navigate(`/messages?threadId=${thread.threadId}`);

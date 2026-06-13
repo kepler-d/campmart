@@ -8,7 +8,7 @@ export default function Messages() {
   const threadEndRef = useRef(null);
 
   // State
-  const [threads, setThreads] = useState(getMessages());
+  const [threads, setThreads] = useState([]);
   const [activeThreadId, setActiveThreadId] = useState(null);
   const [inputMessage, setInputMessage] = useState('');
   const [isTyping, setIsTyping] = useState(false);
@@ -16,22 +16,25 @@ export default function Messages() {
 
   // Sync threads and select active conversation
   useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    const urlThreadId = params.get('threadId');
-    const dbThreads = getMessages();
-    setThreads(dbThreads);
+    const fetchInitialData = async () => {
+      const dbThreads = await getMessages();
+      setThreads(dbThreads);
 
-    if (urlThreadId && dbThreads.some(t => t.threadId === urlThreadId)) {
-      setActiveThreadId(urlThreadId);
-    } else if (dbThreads.length > 0) {
-      setActiveThreadId(dbThreads[0].threadId);
-    }
+      const params = new URLSearchParams(location.search);
+      const urlThreadId = params.get('threadId');
+      if (urlThreadId && dbThreads.some(t => t.threadId === urlThreadId)) {
+        setActiveThreadId(urlThreadId);
+      } else if (dbThreads.length > 0) {
+        setActiveThreadId(dbThreads[0].threadId);
+      }
+    };
+    fetchInitialData();
   }, [location.search]);
 
   // Sync messages on dynamic triggers
   useEffect(() => {
-    const handleMessagesUpdate = () => {
-      setThreads(getMessages());
+    const handleMessagesUpdate = async () => {
+      setThreads(await getMessages());
     };
     window.addEventListener('messagesUpdated', handleMessagesUpdate);
     return () => window.removeEventListener('messagesUpdated', handleMessagesUpdate);
@@ -67,12 +70,12 @@ export default function Messages() {
     });
 
     setThreads(updatedThreads);
-    saveMessages(updatedThreads);
+    saveMessages(updatedThreads); // Let it fire and forget
     setInputMessage('');
 
     // Simulate Typing Auto-Responder
     setIsTyping(true);
-    setTimeout(() => {
+    setTimeout(async () => {
       setIsTyping(false);
       const replies = [
         "Yeah, sounds perfect! See you then.",
@@ -83,7 +86,8 @@ export default function Messages() {
       ];
       const randomReply = replies[Math.floor(Math.random() * replies.length)];
 
-      const threadsAfterReply = getMessages().map(t => {
+      const currentThreads = await getMessages();
+      const threadsAfterReply = currentThreads.map(t => {
         if (t.threadId === activeThreadId) {
           const timeString = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
           return {

@@ -4,12 +4,12 @@ import { getMessages, getProfile } from '../db';
 
 export default function Sidebar() {
   const [unreadCount, setUnreadCount] = useState(3);
-  const [profile, setProfile] = useState(getProfile());
+  const [profile, setProfile] = useState({});
   const navigate = useNavigate();
 
   useEffect(() => {
-    const updateUnread = () => {
-      const threads = getMessages();
+    const updateUnread = async () => {
+      const threads = await getMessages();
       setUnreadCount(threads.length > 0 ? threads.length : 3);
     };
     updateUnread();
@@ -18,9 +18,10 @@ export default function Sidebar() {
   }, []);
 
   useEffect(() => {
-    const syncProfile = () => {
-      setProfile(getProfile());
+    const syncProfile = async () => {
+      setProfile(await getProfile());
     };
+    syncProfile();
     window.addEventListener('profileChanged', syncProfile);
     window.addEventListener('authChanged', syncProfile);
     return () => {
