@@ -6,7 +6,7 @@ const DEFAULT_RENTALS = [
   {
     id: "rnt-1",
     title: "Wacom Intuos Pro Drawing Tablet",
-    image: "https://api.dicebear.com/7.x/adventurer/svg?seed=m97y3e",
+    image: "https://api.dicebear.com/9.x/adventurer/svg?seed=m97y3e",
     type: "borrowed",
     partner: "Sarah Jenkins",
     dueDate: "2026-06-15",
@@ -16,7 +16,7 @@ const DEFAULT_RENTALS = [
   {
     id: "rnt-2",
     title: "Calculus: Early Transcendentals, 9th Edition",
-    image: "https://api.dicebear.com/7.x/adventurer/svg?seed=3714rh",
+    image: "https://api.dicebear.com/9.x/adventurer/svg?seed=3714rh",
     type: "lent",
     partner: "Alex Chen",
     dueDate: "2026-06-25",

@@ -66,7 +66,7 @@ const DEFAULT_LISTINGS = [
     rating: 4.8,
     image: "https://images.unsplash.com/photo-1532012197267-da84d127e765?auto=format&fit=crop&w=400",
     seller: "Sarah Jenkins",
-    sellerAvatar: "https://api.dicebear.com/7.x/adventurer/svg?seed=zh95gy",
+    sellerAvatar: "https://api.dicebear.com/9.x/adventurer/svg?seed=zh95gy",
     description: "Used for MATH 101/102. Extremely clean copy, no annotations, markings or highlighted text. Code is used but book itself is in immaculate shape. Happy to meet up anywhere on campus."
   },
   {
@@ -78,7 +78,7 @@ const DEFAULT_LISTINGS = [
     rating: 5.0,
     image: "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&w=400",
     seller: "Alex Chen",
-    sellerAvatar: "https://api.dicebear.com/7.x/adventurer/svg?seed=9puw0m",
+    sellerAvatar: "https://api.dicebear.com/9.x/adventurer/svg?seed=9puw0m",
     description: "Space gray MacBook Pro 13-inch. Selling because I upgraded. Battery health is at 88%. Minor cosmetic scratch on bottom lid but keyboard, trackpad and screen are perfect. Charger included."
   },
   {
@@ -104,7 +104,7 @@ const DEFAULT_LISTINGS = [
     rating: 4.9,
     image: "https://images.unsplash.com/photo-1561069934-eeaff9a5933e?auto=format&fit=crop&w=400",
     seller: "Sarah Jenkins",
-    sellerAvatar: "https://api.dicebear.com/7.x/adventurer/svg?seed=1sciug",
+    sellerAvatar: "https://api.dicebear.com/9.x/adventurer/svg?seed=1sciug",
     description: "Professional creative pen tablet. Renting out for students who need it for design assignments. Stylus, pen stand, extra nibs, and USB-C cable included. Rentals limited to 2 weeks max."
   },
   {
@@ -116,7 +116,7 @@ const DEFAULT_LISTINGS = [
     rating: 4.5,
     image: "https://images.unsplash.com/photo-1551028719-00167b16eac5?auto=format&fit=crop&w=400",
     seller: "Sarah Jenkins",
-    sellerAvatar: "https://api.dicebear.com/7.x/adventurer/svg?seed=w2f1l",
+    sellerAvatar: "https://api.dicebear.com/9.x/adventurer/svg?seed=w2f1l",
     description: "Genuine brown leather jacket, classic varsity bomber style. Fits size Medium/Large. Quilted lining is in great shape. No rips or holes. Pick up at Student Union."
   }
 ];
@@ -127,7 +127,7 @@ const DEFAULT_PROFILE = {
   major: "Computer Science",
   year: "4th Year",
   email: "hardik@university.edu",
-  avatar: "https://api.dicebear.com/7.x/adventurer/svg?seed=tk8uon",
+  avatar: "https://api.dicebear.com/9.x/adventurer/svg?seed=tk8uon",
   rating: 4.9,
   rank: 12,
   points: 1540,
@@ -141,7 +141,7 @@ const DEFAULT_MESSAGES = [
   {
     threadId: "th-1",
     senderName: "Sarah Jenkins",
-    senderAvatar: "https://api.dicebear.com/7.x/adventurer/svg?seed=tcck4d",
+    senderAvatar: "https://api.dicebear.com/9.x/adventurer/svg?seed=tcck4d",
     productContext: {
       title: "Vintage Leather Jacket",
       price: "₹45.00",
@@ -160,7 +160,7 @@ const DEFAULT_MESSAGES = [
   {
     threadId: "th-2",
     senderName: "Alex Chen",
-    senderAvatar: "https://api.dicebear.com/7.x/adventurer/svg?seed=5e85hl",
+    senderAvatar: "https://api.dicebear.com/9.x/adventurer/svg?seed=5e85hl",
     productContext: {
       title: "MacBook Pro M1 2020",
       price: "₹850.00",
@@ -196,8 +196,9 @@ const DEFAULT_MESSAGES = [
 
 async function initDb() {
   try {
-    await mongoose.connect('mongodb://127.0.0.1:27017/campmart');
-    console.log('Connected to MongoDB');
+    const uri = process.env.MONGO_URI;
+    await mongoose.connect(uri);
+    console.log(`Connected to MongoDB Atlas`);
 
     // Seed logic
     const listingsCount = await Listing.countDocuments();
