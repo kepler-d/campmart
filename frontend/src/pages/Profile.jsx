@@ -23,6 +23,14 @@ export default function Profile() {
   const [editMajor, setEditMajor] = useState('');
   const [editYear, setEditYear] = useState('');
   const [editAvatar, setEditAvatar] = useState('');
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
+  const [showHelpModal, setShowHelpModal] = useState(false);
+
+  // Settings State
+  const [darkMode, setDarkMode] = useState(false);
+  const [emailNotifs, setEmailNotifs] = useState(true);
+  const [publicProfile, setPublicProfile] = useState(true);
 
   // Sync profile & listings internally
   useEffect(() => {
@@ -113,9 +121,40 @@ export default function Profile() {
               >
                 Share Profile
               </button>
-              <button className="border border-outline-variant bg-transparent text-on-surface p-2 rounded-lg hover:bg-surface-container-low transition-colors cursor-pointer">
-                <span className="material-symbols-outlined">more_horiz</span>
-              </button>
+              <div className="relative">
+                <button 
+                  onClick={() => setShowDropdown(!showDropdown)}
+                  className="border border-outline-variant bg-transparent text-on-surface p-2 rounded-lg hover:bg-surface-container-low transition-colors cursor-pointer"
+                >
+                  <span className="material-symbols-outlined">more_horiz</span>
+                </button>
+                
+                {showDropdown && (
+                  <div className="absolute right-0 mt-2 w-48 bg-surface-container-lowest border border-surface-variant rounded-xl shadow-lg overflow-hidden z-10 flex flex-col">
+                    <button 
+                      onClick={() => { setShowSettingsModal(true); setShowDropdown(false); }}
+                      className="text-left px-4 py-3 font-body-md hover:bg-surface-container-low transition-colors text-on-surface border-0 bg-transparent cursor-pointer flex items-center gap-2"
+                    >
+                      <span className="material-symbols-outlined text-[18px]">settings</span>
+                      Settings
+                    </button>
+                    <button 
+                      onClick={() => { setShowHelpModal(true); setShowDropdown(false); }}
+                      className="text-left px-4 py-3 font-body-md hover:bg-surface-container-low transition-colors text-on-surface border-0 border-b border-surface-variant bg-transparent cursor-pointer flex items-center gap-2"
+                    >
+                      <span className="material-symbols-outlined text-[18px]">help</span>
+                      Help & Support
+                    </button>
+                    <button 
+                      onClick={() => navigate('/login')}
+                      className="text-left px-4 py-3 font-body-md hover:bg-error/10 transition-colors text-error border-0 bg-transparent cursor-pointer flex items-center gap-2 font-semibold"
+                    >
+                      <span className="material-symbols-outlined text-[18px]">logout</span>
+                      Log Out
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -300,13 +339,44 @@ export default function Profile() {
                 />
               </div>
               <div>
-                <label className="block font-label-md text-label-md text-on-surface-variant mb-xs">Avatar URL</label>
-                <input 
-                  type="text" 
-                  value={editAvatar}
-                  onChange={(e) => setEditAvatar(e.target.value)}
-                  className="w-full rounded-lg border border-outline-variant bg-surface-container-lowest px-md py-2.5 text-body-md font-body-md outline-none focus:border-primary focus:ring-1 focus:ring-primary"
-                />
+                <label className="block font-label-md text-label-md text-on-surface-variant mb-xs">Avatar</label>
+                <div className="flex flex-wrap gap-3">
+                  {["Felix", "Aneka", "Jack", "Sarah", "Milo"].map(seed => {
+                    const url = `https://api.dicebear.com/9.x/adventurer/svg?seed=${seed}`;
+                    return (
+                      <button 
+                        type="button"
+                        key={seed}
+                        onClick={() => setEditAvatar(url)}
+                        className={`w-12 h-12 rounded-full overflow-hidden border-2 cursor-pointer p-0 bg-surface-container transition-all ${editAvatar === url ? 'border-primary scale-110 shadow-md' : 'border-transparent opacity-80 hover:opacity-100'}`}
+                      >
+                        <img src={url} alt={seed} className="w-full h-full object-cover" />
+                      </button>
+                    );
+                  })}
+                  
+                  {/* File Upload Button */}
+                  <label className={`w-12 h-12 rounded-full border-2 border-dashed flex items-center justify-center cursor-pointer transition-colors relative overflow-hidden ${editAvatar && editAvatar.startsWith('data:image') ? 'border-primary scale-110 shadow-md' : 'border-outline-variant bg-surface-container-lowest hover:border-primary text-on-surface-variant hover:text-primary'}`}>
+                    {editAvatar && editAvatar.startsWith('data:image') ? (
+                      <img src={editAvatar} alt="Custom Avatar" className="w-full h-full object-cover" />
+                    ) : (
+                      <span className="material-symbols-outlined text-[20px]">upload</span>
+                    )}
+                    <input 
+                      type="file" 
+                      accept="image/*" 
+                      className="hidden" 
+                      onChange={(e) => {
+                        const file = e.target.files[0];
+                        if (file) {
+                          const reader = new FileReader();
+                          reader.onloadend = () => setEditAvatar(reader.result);
+                          reader.readAsDataURL(file);
+                        }
+                      }} 
+                    />
+                  </label>
+                </div>
               </div>
               <div className="flex justify-end gap-sm mt-md pt-2">
                 <button 
@@ -321,6 +391,124 @@ export default function Profile() {
                   className="px-md py-2 bg-primary text-on-primary rounded-lg font-label-md text-label-md hover:bg-primary/95 transition-colors shadow-sm cursor-pointer border-0 font-semibold active:scale-95"
                 >
                   Save Changes
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Settings Modal */}
+      {showSettingsModal && (
+        <div className="fixed inset-0 z-[100] bg-inverse-surface/40 backdrop-blur-sm flex items-center justify-center p-md">
+          <div className="bg-white dark:bg-inverse-surface border border-outline-variant/30 rounded-xl max-w-md w-full p-lg shadow-2xl flex flex-col gap-md">
+            <div className="flex justify-between items-center">
+              <h3 className="font-headline-md text-headline-md font-bold text-on-surface">Settings</h3>
+              <button onClick={() => setShowSettingsModal(false)} className="text-on-surface-variant hover:text-on-surface cursor-pointer border-0 bg-transparent p-1">
+                <span className="material-symbols-outlined">close</span>
+              </button>
+            </div>
+            
+            <div className="space-y-4 my-2">
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="font-label-lg font-bold text-on-surface">Dark Mode</div>
+                  <div className="font-body-sm text-on-surface-variant">Switch to dark aesthetic</div>
+                </div>
+                <button 
+                  onClick={() => {
+                    setDarkMode(!darkMode);
+                    document.documentElement.classList.toggle('dark');
+                  }}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors cursor-pointer border-0 ${darkMode ? 'bg-primary' : 'bg-surface-variant'}`}
+                >
+                  <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${darkMode ? 'translate-x-6' : 'translate-x-1'}`}/>
+                </button>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="font-label-lg font-bold text-on-surface">Email Notifications</div>
+                  <div className="font-body-sm text-on-surface-variant">Get alerts for new messages</div>
+                </div>
+                <button 
+                  onClick={() => setEmailNotifs(!emailNotifs)}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors cursor-pointer border-0 ${emailNotifs ? 'bg-primary' : 'bg-surface-variant'}`}
+                >
+                  <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${emailNotifs ? 'translate-x-6' : 'translate-x-1'}`}/>
+                </button>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="font-label-lg font-bold text-on-surface">Public Profile</div>
+                  <div className="font-body-sm text-on-surface-variant">Allow non-students to see you</div>
+                </div>
+                <button 
+                  onClick={() => setPublicProfile(!publicProfile)}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors cursor-pointer border-0 ${publicProfile ? 'bg-primary' : 'bg-surface-variant'}`}
+                >
+                  <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${publicProfile ? 'translate-x-6' : 'translate-x-1'}`}/>
+                </button>
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-sm mt-4 pt-4 border-t border-surface-variant">
+              <button 
+                onClick={() => setShowSettingsModal(false)}
+                className="px-6 py-2 bg-primary text-on-primary rounded-lg font-label-md text-label-md hover:bg-primary/95 transition-colors shadow-sm cursor-pointer border-0 font-semibold active:scale-95 w-full"
+              >
+                Save Settings
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Help & Support Modal */}
+      {showHelpModal && (
+        <div className="fixed inset-0 z-[100] bg-inverse-surface/40 backdrop-blur-sm flex items-center justify-center p-md">
+          <div className="bg-white dark:bg-inverse-surface border border-outline-variant/30 rounded-xl max-w-md w-full p-lg shadow-2xl flex flex-col gap-md">
+            <div className="flex justify-between items-center mb-2">
+              <h3 className="font-headline-md text-headline-md font-bold text-on-surface">Help & Support</h3>
+              <button onClick={() => setShowHelpModal(false)} className="text-on-surface-variant hover:text-on-surface cursor-pointer border-0 bg-transparent p-1">
+                <span className="material-symbols-outlined">close</span>
+              </button>
+            </div>
+            
+            <form onSubmit={(e) => {
+              e.preventDefault();
+              alert("Your message has been sent to our support team!");
+              setShowHelpModal(false);
+            }} className="space-y-4">
+              <div>
+                <label className="block font-label-md text-label-md text-on-surface-variant mb-xs">How can we help?</label>
+                <select className="w-full rounded-lg border border-outline-variant bg-surface-container-lowest px-md py-2.5 text-body-md font-body-md outline-none focus:border-primary focus:ring-1 focus:ring-primary cursor-pointer">
+                  <option>Account Issue</option>
+                  <option>Report a Listing</option>
+                  <option>Payment Dispute</option>
+                  <option>Feature Request</option>
+                  <option>Other</option>
+                </select>
+              </div>
+              
+              <div>
+                <label className="block font-label-md text-label-md text-on-surface-variant mb-xs">Message</label>
+                <textarea 
+                  required
+                  rows="4"
+                  placeholder="Describe your issue in detail..."
+                  className="w-full rounded-lg border border-outline-variant bg-surface-container-lowest px-md py-2.5 text-body-md font-body-md outline-none focus:border-primary focus:ring-1 focus:ring-primary resize-none"
+                ></textarea>
+              </div>
+
+              <div className="flex justify-end gap-sm mt-md pt-2">
+                <button 
+                  type="submit"
+                  className="px-6 py-2 bg-primary text-on-primary rounded-lg font-label-md text-label-md hover:bg-primary/95 transition-colors shadow-sm cursor-pointer border-0 font-semibold active:scale-95 w-full flex items-center justify-center gap-2"
+                >
+                  <span className="material-symbols-outlined text-[18px]">send</span>
+                  Send Message
                 </button>
               </div>
             </form>
