@@ -83,7 +83,7 @@ cd frontend
 npm install
 npm run dev
 ```
-*The frontend will run on `http://localhost:5173`. Open this URL in your browser.*
+*The frontend will run on `http://localhost:5500`. Open this URL in your browser.*
 
 ---
 
