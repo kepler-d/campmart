@@ -9,11 +9,13 @@ export async function loginUser(email, password) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email, password })
   });
+  const data = await res.json();
   if (!res.ok) {
-    const errorData = await res.json();
-    throw new Error(errorData.error || 'Failed to login');
+    const err = new Error(data.error || 'Failed to login');
+    err.requiresOtp = data.requiresOtp;
+    throw err;
   }
-  return await res.json();
+  return data;
 }
 
 export async function registerUser(profileData) {
@@ -22,11 +24,62 @@ export async function registerUser(profileData) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(profileData)
   });
+  const data = await res.json();
   if (!res.ok) {
-    const errorData = await res.json();
-    throw new Error(errorData.error || 'Failed to register');
+    const err = new Error(data.error || 'Failed to register');
+    err.code = data.error; // e.g. 'domain_not_allowed'
+    throw err;
   }
-  return await res.json();
+  return data;
+}
+
+export async function verifyOtp(email, otp) {
+  const res = await fetch(`${API_URL}/auth/verify-otp`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, otp })
+  });
+  const data = await res.json();
+  if (!res.ok) {
+    throw new Error(data.error || 'Failed to verify OTP');
+  }
+  return data;
+}
+
+export async function requestCampus(domain, institutionName, requesterEmail) {
+  const res = await fetch(`${API_URL}/campus-requests`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ domain, institutionName, requesterEmail })
+  });
+  const data = await res.json();
+  if (!res.ok) {
+    throw new Error(data.error || 'Failed to request campus');
+  }
+  return data;
+}
+
+export async function getCampusRequests() {
+  try {
+    const res = await fetch(`${API_URL}/campus-requests`);
+    return await res.json();
+  } catch (err) {
+    console.error('Failed to fetch campus requests:', err);
+    return [];
+  }
+}
+
+export async function approveCampusRequest(requestId) {
+  const res = await fetch(`${API_URL}/campus-requests/approve`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ requestId })
+  });
+  const data = await res.json();
+  if (!res.ok) {
+    throw new Error(data.error || 'Failed to approve campus');
+  }
+  return data;
 }
 
 export async function getListings() {
@@ -77,9 +130,20 @@ export async function saveProfile(profile) {
   }
 }
 
-export async function getMessages() {
+export async function getOtherProfile(email) {
   try {
-    const res = await fetch(`${API_URL}/messages`);
+    const res = await fetch(`${API_URL}/profile?email=${encodeURIComponent(email)}`);
+    return await res.json();
+  } catch (err) {
+    console.error('Failed to fetch profile:', err);
+    return null;
+  }
+}
+
+export async function getMessages(email) {
+  if (!email) return [];
+  try {
+    const res = await fetch(`${API_URL}/messages?email=${encodeURIComponent(email)}`);
     return await res.json();
   } catch (err) {
     console.error('Failed to fetch messages:', err);
@@ -87,16 +151,32 @@ export async function getMessages() {
   }
 }
 
-export async function saveMessages(threads) {
+export async function markThreadAsRead(threadId, email) {
   try {
-    await fetch(`${API_URL}/messages`, {
+    await fetch(`${API_URL}/messages/read`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(threads)
+      body: JSON.stringify({ threadId, email })
     });
     window.dispatchEvent(new Event('messagesUpdated'));
   } catch (err) {
-    console.error('Failed to save messages:', err);
+    console.error('Failed to mark thread as read:', err);
+  }
+}
+
+export async function createMessageThread(buyerEmail, sellerEmail, productContext, sellerName, sellerAvatar) {
+  try {
+    const res = await fetch(`${API_URL}/messages/thread`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ buyerEmail, sellerEmail, productContext, sellerName, sellerAvatar })
+    });
+    const thread = await res.json();
+    window.dispatchEvent(new Event('messagesUpdated'));
+    return thread;
+  } catch (err) {
+    console.error('Failed to create message thread:', err);
+    return null;
   }
 }
 

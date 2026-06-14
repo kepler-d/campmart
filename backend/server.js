@@ -35,12 +35,17 @@ io.on('connection', (socket) => {
   socket.on('sendMessage', async (data) => {
     try {
       const { threadId, sender, text, time } = data;
-      // Append the new message to the thread in DB
-      await MessageThread.updateOne(
-        { threadId },
-        { $push: { messages: { sender, text, time } } }
-      );
-      apiRoutes.clearMessagesCache();
+      const thread = await MessageThread.findOne({ threadId });
+      if (thread) {
+        thread.messages.push({ sender, text, time });
+        const otherParticipant = thread.participants?.find(p => p !== sender);
+        if (otherParticipant) {
+          if (!thread.unreadCount) thread.unreadCount = {};
+          thread.unreadCount[otherParticipant] = (thread.unreadCount[otherParticipant] || 0) + 1;
+          thread.markModified('unreadCount');
+        }
+        await thread.save();
+      }
       
       // Broadcast the message so all clients update their UI
       io.emit('receiveMessage', data);

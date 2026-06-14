@@ -23,6 +23,7 @@ export default function Profile() {
   const [editMajor, setEditMajor] = useState('');
   const [editYear, setEditYear] = useState('');
   const [editAvatar, setEditAvatar] = useState('');
+  const [editAbout, setEditAbout] = useState('');
   const [showDropdown, setShowDropdown] = useState(false);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [showHelpModal, setShowHelpModal] = useState(false);
@@ -51,6 +52,7 @@ export default function Profile() {
     setEditMajor(profile.major);
     setEditYear(profile.year || '');
     setEditAvatar(profile.avatar || '');
+    setEditAbout(profile.about || '');
     setShowEditModal(true);
   };
 
@@ -61,7 +63,8 @@ export default function Profile() {
       name: editName.trim() || profile.name,
       major: editMajor.trim() || profile.major,
       year: editYear.trim() || profile.year,
-      avatar: editAvatar.trim() || profile.avatar
+      avatar: editAvatar.trim() || profile.avatar,
+      about: editAbout.trim()
     };
 
     setProfile(updated);
@@ -77,7 +80,7 @@ export default function Profile() {
       {/* Header / Profile Summary Bento */}
       <section className="flex flex-col lg:flex-row gap-gutter mb-xl">
         {/* Main Profile Card */}
-        <div className="flex-1 bg-surface-container-lowest rounded-xl border border-surface-variant p-lg flex flex-col md:flex-row items-center md:items-start gap-lg relative overflow-hidden shadow-sm">
+        <div className="flex-1 bg-surface-container-lowest rounded-xl border border-surface-variant p-lg flex flex-col md:flex-row items-center md:items-start gap-lg relative shadow-sm">
           {/* Ambient Glow */}
           <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -z-10 translate-x-1/2 -translate-y-1/2"></div>
           
@@ -102,9 +105,13 @@ export default function Profile() {
                 {profile.major} {profile.year && `• ${profile.year}`}
               </span>
             </div>
-            <p className="font-body-md text-body-md text-on-surface-variant mb-4 max-w-lg leading-relaxed">
-              Active member since Fall 2021. Usually replies within 15 minutes. Preferred meeting spot: Student Union North Entrance.
-            </p>
+            
+            {profile.about && (
+              <p className="font-body-md text-body-md text-on-surface-variant mb-4 max-w-lg leading-relaxed whitespace-pre-line">
+                {profile.about}
+              </p>
+            )}
+
             <div className="flex flex-wrap gap-sm justify-center md:justify-start">
               <button 
                 onClick={openEditModal}
@@ -343,6 +350,16 @@ export default function Profile() {
                   onChange={(e) => setEditYear(e.target.value)}
                   className="w-full rounded-lg border border-outline-variant bg-surface-container-lowest px-md py-2.5 text-body-md font-body-md outline-none focus:border-primary focus:ring-1 focus:ring-primary"
                 />
+              </div>
+              <div>
+                <label className="block font-label-md text-label-md text-on-surface-variant mb-xs">About Me</label>
+                <textarea 
+                  value={editAbout}
+                  onChange={(e) => setEditAbout(e.target.value)}
+                  placeholder="Tell people a bit about yourself..."
+                  rows="3"
+                  className="w-full rounded-lg border border-outline-variant bg-surface-container-lowest px-md py-2.5 text-body-md font-body-md outline-none focus:border-primary focus:ring-1 focus:ring-primary resize-none"
+                ></textarea>
               </div>
               <div>
                 <label className="block font-label-md text-label-md text-on-surface-variant mb-xs">Avatar</label>

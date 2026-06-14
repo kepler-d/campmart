@@ -21,6 +21,8 @@ const listingSchema = new mongoose.Schema({
 const profileSchema = new mongoose.Schema({
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
+  isVerified: { type: Boolean, default: false },
+  otp: String,
   name: String,
   major: String,
   year: String,
@@ -36,6 +38,7 @@ const profileSchema = new mongoose.Schema({
 
 const messageThreadSchema = new mongoose.Schema({
   threadId: { type: String, required: true, unique: true },
+  participants: [String],
   senderName: String,
   senderAvatar: String,
   productContext: Object,
@@ -49,11 +52,27 @@ const favoriteSchema = new mongoose.Schema({
   listingId: { type: String, required: true }
 });
 
+const allowedDomainSchema = new mongoose.Schema({
+  domain: { type: String, required: true, unique: true },
+  institutionName: String
+});
+
+const campusRequestSchema = new mongoose.Schema({
+  domain: { type: String, required: true },
+  institutionName: { type: String, required: true },
+  requesterEmail: String,
+  status: { type: String, default: 'Pending' },
+  createdAt: { type: Date, default: Date.now }
+});
+
 // --- Models ---
 const Listing = mongoose.model('Listing', listingSchema);
 const Profile = mongoose.model('Profile', profileSchema);
 const MessageThread = mongoose.model('MessageThread', messageThreadSchema);
 const Favorite = mongoose.model('Favorite', favoriteSchema);
+const AllowedDomain = mongoose.model('AllowedDomain', allowedDomainSchema);
+const CampusRequest = mongoose.model('CampusRequest', campusRequestSchema);
+
 
 // --- Defaults ---
 const DEFAULT_LISTINGS = [
@@ -124,7 +143,8 @@ const DEFAULT_LISTINGS = [
 
 const DEFAULT_PROFILE = {
   email: "hardik@university.edu",
-  password: "password123",
+  password: "password123", // Note: will need hashing if saving via route, but initDb skips hooks. Let's keep raw for now, or just leave it. In reality demo users are mock-auth'd.
+  isVerified: true,
   name: "Hardik",
   major: "Computer Science",
   year: "4th Year",
@@ -209,6 +229,7 @@ async function initDb() {
       const aaravProfile = {
         email: "student@university.edu",
         password: "password123",
+        isVerified: true,
         name: "Aarav Sharma",
         major: "Mechanical Engineering",
         year: "2nd Year",
@@ -225,6 +246,7 @@ async function initDb() {
       await Profile.create([DEFAULT_PROFILE, aaravProfile]);
       await MessageThread.insertMany(DEFAULT_MESSAGES);
       await Favorite.create({ userEmail: 'hardik@university.edu', listingId: 'lst-2' });
+      await AllowedDomain.create({ domain: '@indoreinstitute.com', institutionName: 'Indore Institute' });
       console.log('MongoDB successfully seeded with default data.');
     }
   } catch (err) {
@@ -244,5 +266,7 @@ module.exports = {
   Listing,
   Profile,
   MessageThread,
-  Favorite
+  Favorite,
+  AllowedDomain,
+  CampusRequest
 };

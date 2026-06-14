@@ -64,6 +64,7 @@ export default function CreateListing() {
       rating: 5.0,
       image: imageUrl,
       seller: profile.name || 'Hardik',
+      sellerEmail: profile.email,
       sellerAvatar: profile.avatar || '',
       description: desc
     };

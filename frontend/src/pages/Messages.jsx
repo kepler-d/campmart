@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { getMessages, saveMessages, getProfile } from '../db';
+import { getMessages, getProfile, getOtherProfile, markThreadAsRead } from '../db';
 import { io } from 'socket.io-client';
 
 const socket = io('http://localhost:5000');
@@ -17,15 +17,38 @@ export default function Messages() {
   const [isTyping, setIsTyping] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [currentUser, setCurrentUser] = useState(null);
+  const [participantProfiles, setParticipantProfiles] = useState({});
 
   useEffect(() => {
     getProfile().then(setCurrentUser);
   }, []);
 
+  useEffect(() => {
+    const fetchProfiles = async () => {
+      let newProfiles = { ...participantProfiles };
+      let changed = false;
+      for (const thread of threads) {
+        const otherEmail = thread.participants?.find(e => e !== currentUser?.email);
+        if (otherEmail && !newProfiles[otherEmail]) {
+          const profile = await getOtherProfile(otherEmail);
+          if (profile) {
+            newProfiles[otherEmail] = profile;
+            changed = true;
+          }
+        }
+      }
+      if (changed) setParticipantProfiles(newProfiles);
+    };
+    if (threads.length > 0 && currentUser?.email) {
+      fetchProfiles();
+    }
+  }, [threads, currentUser]);
+
   // Sync threads and select active conversation
   useEffect(() => {
     const fetchInitialData = async () => {
-      const dbThreads = await getMessages();
+      if (!currentUser?.email) return;
+      const dbThreads = await getMessages(currentUser.email);
       setThreads(dbThreads);
 
       const params = new URLSearchParams(location.search);
@@ -36,13 +59,17 @@ export default function Messages() {
         setActiveThreadId(dbThreads[0].threadId);
       }
     };
-    fetchInitialData();
-  }, [location.search]);
+    if (currentUser?.email) {
+      fetchInitialData();
+    }
+  }, [location.search, currentUser]);
 
   // Sync messages on dynamic triggers
   useEffect(() => {
     const handleMessagesUpdate = async () => {
-      setThreads(await getMessages());
+      if (currentUser?.email) {
+        setThreads(await getMessages(currentUser.email));
+      }
     };
     window.addEventListener('messagesUpdated', handleMessagesUpdate);
     
@@ -80,6 +107,21 @@ export default function Messages() {
     scrollToBottom();
   }, [activeThread?.messages?.length, isTyping]);
 
+  useEffect(() => {
+    if (activeThreadId && currentUser?.email) {
+      const activeT = threads.find(t => t.threadId === activeThreadId);
+      if (activeT && activeT.unreadCount && activeT.unreadCount[currentUser.email] > 0) {
+        markThreadAsRead(activeThreadId, currentUser.email);
+        setThreads(prev => prev.map(t => {
+          if (t.threadId === activeThreadId) {
+            return { ...t, unreadCount: { ...t.unreadCount, [currentUser.email]: 0 } };
+          }
+          return t;
+        }));
+      }
+    }
+  }, [activeThreadId, activeThread?.messages?.length, currentUser]);
+
   const handleSendMessage = (e) => {
     if (e) e.preventDefault();
     const text = inputMessage.trim();
@@ -89,7 +131,7 @@ export default function Messages() {
     
     socket.emit('sendMessage', {
       threadId: activeThreadId,
-      sender: currentUser?.name === 'Hardik' ? 'me' : 'them',
+      sender: currentUser?.email,
       text,
       time: timeString,
       clientId: socket.id
@@ -106,9 +148,13 @@ export default function Messages() {
   };
 
   // Filter conversations
-  const filteredThreads = threads.filter(t =>
-    t.senderName.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredThreads = threads.filter(t => {
+    const otherEmail = t.participants?.find(e => e !== currentUser?.email);
+    const otherProfile = otherEmail ? participantProfiles[otherEmail] : null;
+    const fallbackName = otherEmail ? otherEmail.split('@')[0] : 'User';
+    const displaySenderName = otherProfile?.name || fallbackName;
+    return displaySenderName.toLowerCase().includes(searchTerm.toLowerCase());
+  });
 
   return (
     <div className="flex-grow flex w-full h-[calc(100vh-72px)] bg-surface-container-lowest overflow-hidden">
@@ -158,8 +204,14 @@ export default function Messages() {
               const lastMsgText = lastMsg ? lastMsg.text : 'No messages yet';
               const lastMsgTime = lastMsg ? lastMsg.time : '';
               
-              const displaySenderName = thread.senderName === currentUser?.name ? "Hardik (Admin)" : thread.senderName;
-              const displaySenderAvatar = thread.senderName === currentUser?.name ? "https://api.dicebear.com/9.x/adventurer/svg?seed=bbnm8e" : thread.senderAvatar;
+              const otherEmail = thread.participants?.find(e => e !== currentUser?.email);
+              const otherProfile = otherEmail ? participantProfiles[otherEmail] : null;
+              const fallbackName = otherEmail ? otherEmail.split('@')[0] : 'User';
+              const displaySenderName = otherProfile?.name || fallbackName;
+              const displaySenderAvatar = otherProfile?.avatar || `https://api.dicebear.com/9.x/initials/svg?seed=${displaySenderName}`;
+              
+              const unreadCount = thread.unreadCount?.[currentUser?.email] || 0;
+              const hasUnread = unreadCount > 0;
 
               const initials = displaySenderName
                 .split(' ')
@@ -188,13 +240,18 @@ export default function Messages() {
                       <h3 className={`font-label-md text-label-md ${isActive ? 'font-bold text-primary' : 'font-medium text-on-surface'} truncate`}>
                         {displaySenderName}
                       </h3>
-                      <span className={`font-label-sm text-label-sm shrink-0 ${isActive ? 'text-primary font-semibold' : 'text-outline'}`}>
+                      <span className={`font-label-sm text-label-sm shrink-0 ${hasUnread ? 'text-primary font-bold' : (isActive ? 'text-primary font-semibold' : 'text-outline')}`}>
                         {lastMsgTime}
                       </span>
                     </div>
-                    <p className="font-body-md text-body-md text-on-surface-variant truncate text-sm">
-                      {lastMsgText}
-                    </p>
+                    <div className="flex justify-between items-center gap-2">
+                      <p className={`font-body-md text-body-md truncate text-sm ${hasUnread ? 'text-on-surface font-bold' : 'text-on-surface-variant'}`}>
+                        {lastMsgText}
+                      </p>
+                      {hasUnread && (
+                        <div className="w-3 h-3 rounded-full bg-primary flex-shrink-0"></div>
+                      )}
+                    </div>
                   </div>
                 </div>
               );
@@ -207,8 +264,11 @@ export default function Messages() {
       <section className="flex flex-col flex-grow bg-surface-container-lowest relative h-full overflow-hidden">
         {activeThread ? (
           (() => {
-            const activeDisplayName = activeThread.senderName === currentUser?.name ? "Hardik (Admin)" : activeThread.senderName;
-            const activeDisplayAvatar = activeThread.senderName === currentUser?.name ? "https://api.dicebear.com/9.x/adventurer/svg?seed=bbnm8e" : activeThread.senderAvatar;
+            const otherEmail = activeThread.participants?.find(e => e !== currentUser?.email);
+            const otherProfile = otherEmail ? participantProfiles[otherEmail] : null;
+            const fallbackName = otherEmail ? otherEmail.split('@')[0] : 'User';
+            const activeDisplayName = otherProfile?.name || fallbackName;
+            const activeDisplayAvatar = otherProfile?.avatar || `https://api.dicebear.com/9.x/initials/svg?seed=${activeDisplayName}`;
             return (
           <>
             {/* Chat Header */}
@@ -279,8 +339,7 @@ export default function Messages() {
 
               {/* Chat history list */}
               {activeThread.messages.map((msg, index) => {
-                const isAdmin = currentUser ? currentUser.name === 'Hardik' : true;
-                const isMe = isAdmin ? msg.sender === 'me' : msg.sender === 'them';
+                const isMe = msg.sender === currentUser?.email || (msg.sender === 'me' && currentUser?.name === 'Hardik');
                 if (isMe) {
                   return (
                     <div key={index} className="flex items-end gap-2 self-end max-w-[75%] mt-sm">

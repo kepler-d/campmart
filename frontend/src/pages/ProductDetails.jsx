@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { getListings, getFavorites, toggleFavorite, getMessages, saveMessages } from '../db';
+import { getListings, getFavorites, toggleFavorite, getProfile, createMessageThread } from '../db';
 
 export default function ProductDetails() {
   const { id } = useParams();
@@ -72,33 +72,35 @@ export default function ProductDetails() {
   };
 
   const handleMessageClick = async () => {
-    const threads = await getMessages();
-    // Check if thread already exists for this seller
-    let thread = threads.find(t => t.senderName === product.seller);
-    if (!thread) {
-      // Create new thread
-      thread = {
-        threadId: `th-${Date.now()}`,
-        senderName: product.seller,
-        senderAvatar: product.sellerAvatar || "",
-        productContext: {
-          title: product.title,
-          price: product.isRentOnly 
-            ? `₹${(product.rentPrice || 0).toFixed(2)}/mo`
-            : `₹${product.price.toFixed(2)}`,
-          image: product.image
-        },
-        online: true,
-        lastActive: "Now",
-        messages: [
-          { sender: "them", text: `Hi! I saw you are interested in "${product.title}". How can I help?`, time: "Now" }
-        ]
-      };
-      threads.unshift(thread);
-      await saveMessages(threads);
+    const profile = await getProfile();
+    if (!profile || !profile.email) {
+      navigate('/login');
+      return;
     }
-    // Redirect to messages page
-    navigate(`/messages?threadId=${thread.threadId}`);
+    
+    // For now, product.seller is the name, but we need their email.
+    // In a real app, listing would have sellerEmail. We'll use a mocked email for the seller based on their name for demonstration.
+    const sellerEmail = product.sellerEmail || product.seller.toLowerCase().replace(' ', '.') + '@indoreinstitute.com';
+
+    const thread = await createMessageThread(
+      profile.email,
+      sellerEmail,
+      {
+        title: product.title,
+        price: product.isRentOnly 
+          ? `₹${(product.rentPrice || 0).toFixed(2)}/mo`
+          : `₹${product.price.toFixed(2)}`,
+        image: product.image
+      },
+      product.seller,
+      product.sellerAvatar
+    );
+
+    if (thread) {
+      navigate(`/messages?threadId=${thread.threadId}`);
+    } else {
+      alert("Failed to create message thread");
+    }
   };
 
   // Get related items

@@ -9,13 +9,21 @@ export default function Sidebar() {
 
   useEffect(() => {
     const updateUnread = async () => {
-      const threads = await getMessages();
-      setUnreadCount(threads.length > 0 ? threads.length : 3);
+      if (profile && profile.email) {
+        const threads = await getMessages(profile.email);
+        let totalUnread = 0;
+        for (const thread of threads) {
+          totalUnread += (thread.unreadCount?.[profile.email] || 0);
+        }
+        setUnreadCount(totalUnread);
+      } else {
+        setUnreadCount(0);
+      }
     };
     updateUnread();
     window.addEventListener('messagesUpdated', updateUnread);
     return () => window.removeEventListener('messagesUpdated', updateUnread);
-  }, []);
+  }, [profile]);
 
   useEffect(() => {
     const syncProfile = async () => {
@@ -70,9 +78,11 @@ export default function Sidebar() {
                     <span className={iconClass(isActive)}>chat_bubble</span>
                     Messages
                   </div>
-                  <span className="bg-primary text-on-primary text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0">
-                    {unreadCount}
-                  </span>
+                  {unreadCount > 0 && (
+                    <span className="bg-primary text-on-primary text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0">
+                      {unreadCount}
+                    </span>
+                  )}
                 </div>
               </>
             )}

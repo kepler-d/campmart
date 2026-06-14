@@ -1,6 +1,23 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { getCampusRequests, approveCampusRequest } from '../db';
 
 export default function Admin() {
+  const [campusRequests, setCampusRequests] = useState([]);
+
+  useEffect(() => {
+    getCampusRequests().then(setCampusRequests);
+  }, []);
+
+  const handleApproveCampus = async (id) => {
+    try {
+      await approveCampusRequest(id);
+      setCampusRequests(prev => prev.map(req => req._id === id ? { ...req, status: 'Approved' } : req));
+      alert("Campus Approved and Added to Allowed Domains!");
+    } catch (err) {
+      alert(err.message);
+    }
+  };
+
   // Moderate reports list
   const [reports, setReports] = useState([
     {
@@ -318,6 +335,61 @@ export default function Admin() {
                   </tr>
                 );
               })}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Campus Access Requests Table */}
+      <div className="mt-xl glass-card rounded-xl overflow-hidden shadow-sm mb-xl">
+        <div className="p-6 border-b border-outline-variant/30 flex justify-between items-center bg-surface-container-lowest/50">
+          <h3 className="font-headline-md text-headline-md font-semibold text-on-surface font-bold">Campus Access Requests</h3>
+          <span className="text-outline text-label-sm font-semibold">{campusRequests.filter(r => r.status === 'Pending').length} Pending</span>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="bg-surface-container-low text-on-surface-variant font-label-md text-label-md uppercase tracking-wider">
+                <th className="p-4 font-bold">Domain</th>
+                <th className="p-4 font-bold">Institution Name</th>
+                <th className="p-4 font-bold">Requested By</th>
+                <th className="p-4 font-bold">Status</th>
+                <th className="p-4 font-bold text-right">Action</th>
+              </tr>
+            </thead>
+            <tbody className="font-body-md text-body-md text-on-surface divide-y divide-outline-variant/20">
+              {campusRequests.length === 0 ? (
+                <tr>
+                  <td colSpan="5" className="p-4 text-center text-on-surface-variant">No campus requests found.</td>
+                </tr>
+              ) : campusRequests.map((req) => (
+                <tr key={req._id} className="hover:bg-surface-container-lowest/50 transition-colors">
+                  <td className="p-4 font-semibold text-primary">{req.domain}</td>
+                  <td className="p-4">{req.institutionName}</td>
+                  <td className="p-4">{req.requesterEmail}</td>
+                  <td className="p-4">
+                    <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold ${
+                      req.status === 'Pending' 
+                        ? 'bg-secondary-container/30 text-secondary' 
+                        : 'bg-primary-container text-on-primary-container'
+                    }`}>
+                      {req.status}
+                    </span>
+                  </td>
+                  <td className="p-4 text-right">
+                    {req.status === 'Pending' ? (
+                      <button 
+                        onClick={() => handleApproveCampus(req._id)}
+                        className="px-3 py-1.5 bg-primary text-on-primary rounded-lg font-label-sm text-label-sm shadow-sm cursor-pointer border-0 hover:bg-primary/95"
+                      >
+                        Approve
+                      </button>
+                    ) : (
+                      <span className="text-outline text-sm">Added</span>
+                    )}
+                  </td>
+                </tr>
+              ))}
             </tbody>
           </table>
         </div>
