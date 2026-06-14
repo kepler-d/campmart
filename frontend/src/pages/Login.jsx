@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { saveProfile, getProfile } from '../db';
+import { loginUser, registerUser } from '../db';
 
 export default function Login() {
   const navigate = useNavigate();
@@ -28,26 +28,16 @@ export default function Login() {
     // Simulate short network delay
     setIsLoading(true);
     setTimeout(() => {
-      const adminProfile = {
-        name: "Hardik",
-        major: "Computer Science",
-        year: "4th Year",
-        email: "hardik@university.edu",
-        avatar: "https://api.dicebear.com/9.x/adventurer/svg?seed=bbnm8e",
-        rating: 4.9,
-        rank: 12,
-        points: 1540,
-        listingsCount: 4,
-        salesCount: 8,
-        purchasedCount: 14,
-        isAdmin: true
-      };
-      saveProfile(adminProfile).then(() => {
+      loginUser('hardik@university.edu', 'password123').then(() => {
+        localStorage.setItem('user_email', 'hardik@university.edu');
         localStorage.setItem('is_logged_in', 'true');
         window.dispatchEvent(new Event('authChanged'));
         window.dispatchEvent(new Event('profileChanged'));
         setIsLoading(false);
         navigate('/marketplace');
+      }).catch(err => {
+        setErrorMsg(err.message);
+        setIsLoading(false);
       });
     }, 600);
   };
@@ -60,26 +50,16 @@ export default function Login() {
     // Simulate short network delay
     setIsLoading(true);
     setTimeout(() => {
-      const userProfile = {
-        name: "Aarav Sharma",
-        major: "Mechanical Engineering",
-        year: "2nd Year",
-        email: "student@university.edu",
-        avatar: "https://api.dicebear.com/9.x/adventurer/svg?seed=Aarav",
-        rating: 4.8,
-        rank: 45,
-        points: 320,
-        listingsCount: 1,
-        salesCount: 2,
-        purchasedCount: 5,
-        isAdmin: false
-      };
-      saveProfile(userProfile).then(() => {
+      loginUser('student@university.edu', 'password123').then(() => {
+        localStorage.setItem('user_email', 'student@university.edu');
         localStorage.setItem('is_logged_in', 'true');
         window.dispatchEvent(new Event('authChanged'));
         window.dispatchEvent(new Event('profileChanged'));
         setIsLoading(false);
         navigate('/marketplace');
+      }).catch(err => {
+        setErrorMsg(err.message);
+        setIsLoading(false);
       });
     }, 600);
   };
@@ -111,83 +91,44 @@ export default function Login() {
 
     setIsLoading(true);
 
-    // Simulate mock login api delay
+    // Optional slight delay for effect
     setTimeout(async () => {
       if (mode === 'login') {
-        // Mock authentication success
-        const currentProfile = await getProfile();
-        const isDemoAdmin = email.toLowerCase().trim() === 'hardik@university.edu';
-        const isDemoUser = email.toLowerCase().trim() === 'student@university.edu';
-        
-        let updatedProfile = {
-          ...currentProfile,
-          email: email.toLowerCase().trim(),
-          isAdmin: isDemoAdmin
-        };
-        
-        if (isDemoAdmin) {
-          updatedProfile = {
-            ...updatedProfile,
-            name: "Hardik",
-            major: "Computer Science",
-            year: "4th Year",
-            avatar: "https://api.dicebear.com/9.x/adventurer/svg?seed=nd0e03e",
-            rating: 4.9,
-            rank: 12,
-            points: 1540,
-            listingsCount: 4,
-            salesCount: 8,
-            purchasedCount: 14,
-            isAdmin: true
-          };
-        } else if (isDemoUser) {
-          updatedProfile = {
-            ...updatedProfile,
-            name: "Aarav Sharma",
-            major: "Mechanical Engineering",
-            year: "2nd Year",
-            avatar: "https://api.dicebear.com/9.x/adventurer/svg?seed=Aarav",
-            rating: 4.8,
-            rank: 45,
-            points: 320,
-            listingsCount: 1,
-            salesCount: 2,
-            purchasedCount: 5,
-            isAdmin: false
-          };
+        try {
+          await loginUser(email.toLowerCase().trim(), password);
+          localStorage.setItem('user_email', email.toLowerCase().trim());
+          localStorage.setItem('is_logged_in', 'true');
+          window.dispatchEvent(new Event('authChanged'));
+          window.dispatchEvent(new Event('profileChanged'));
+          setIsLoading(false);
+          navigate('/marketplace');
+        } catch (err) {
+          setErrorMsg(err.message);
+          setIsLoading(false);
         }
-        
-        await saveProfile(updatedProfile);
-        localStorage.setItem('is_logged_in', 'true');
-        window.dispatchEvent(new Event('authChanged'));
-        window.dispatchEvent(new Event('profileChanged'));
-        setIsLoading(false);
-        navigate('/marketplace');
       } else {
         // Register flow: Save new credentials
-        const newProfile = {
-          name: name.trim() || 'Student Trader',
-          major: major.trim() || 'Undecided',
-          year: year.trim() || 'First Year',
-          email: email.toLowerCase().trim(),
-          avatar: `https://api.dicebear.com/9.x/adventurer/svg?seed=${encodeURIComponent(name || 'default')}`,
-          rating: 5.0,
-          rank: 99,
-          points: 100,
-          listingsCount: 0,
-          salesCount: 0,
-          purchasedCount: 0,
-          isAdmin: false
-        };
-
-        await saveProfile(newProfile);
-        localStorage.setItem('is_logged_in', 'true');
-        window.dispatchEvent(new Event('authChanged'));
-        window.dispatchEvent(new Event('profileChanged'));
-        setIsLoading(false);
-        navigate('/marketplace');
+        try {
+          await registerUser({
+            name: name.trim() || 'Student Trader',
+            major: major.trim() || 'Undecided',
+            year: year.trim() || 'First Year',
+            email: email.toLowerCase().trim(),
+            password: password,
+            avatar: `https://api.dicebear.com/9.x/adventurer/svg?seed=${encodeURIComponent(name || 'default')}`
+          });
+          localStorage.setItem('user_email', email.toLowerCase().trim());
+          localStorage.setItem('is_logged_in', 'true');
+          window.dispatchEvent(new Event('authChanged'));
+          window.dispatchEvent(new Event('profileChanged'));
+          setIsLoading(false);
+          navigate('/marketplace');
+        } catch (err) {
+          setErrorMsg(err.message);
+          setIsLoading(false);
+        }
       }
-    }, 1000);
+    }, 600);
   };
 
   return (

@@ -146,7 +146,13 @@ export default function Profile() {
                       Help & Support
                     </button>
                     <button 
-                      onClick={() => navigate('/login')}
+                      onClick={() => {
+                        localStorage.removeItem('is_logged_in');
+                        localStorage.removeItem('user_email');
+                        window.dispatchEvent(new Event('authChanged'));
+                        window.dispatchEvent(new Event('profileChanged'));
+                        navigate('/login');
+                      }}
                       className="text-left px-4 py-3 font-body-md hover:bg-error/10 transition-colors text-error border-0 bg-transparent cursor-pointer flex items-center gap-2 font-semibold"
                     >
                       <span className="material-symbols-outlined text-[18px]">logout</span>

@@ -40,6 +40,7 @@ io.on('connection', (socket) => {
         { threadId },
         { $push: { messages: { sender, text, time } } }
       );
+      apiRoutes.clearMessagesCache();
       
       // Broadcast the message so all clients update their UI
       io.emit('receiveMessage', data);

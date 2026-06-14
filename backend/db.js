@@ -19,11 +19,11 @@ const listingSchema = new mongoose.Schema({
 }, { strict: false }); // Allow dynamic fields if needed
 
 const profileSchema = new mongoose.Schema({
-  id: { type: Number, required: true, unique: true },
+  email: { type: String, required: true, unique: true },
+  password: { type: String, required: true },
   name: String,
   major: String,
   year: String,
-  email: String,
   avatar: String,
   rating: Number,
   rank: Number,
@@ -45,7 +45,8 @@ const messageThreadSchema = new mongoose.Schema({
 }, { strict: false });
 
 const favoriteSchema = new mongoose.Schema({
-  listingId: { type: String, required: true, unique: true }
+  userEmail: { type: String, required: true },
+  listingId: { type: String, required: true }
 });
 
 // --- Models ---
@@ -122,11 +123,11 @@ const DEFAULT_LISTINGS = [
 ];
 
 const DEFAULT_PROFILE = {
-  id: 1,
+  email: "hardik@university.edu",
+  password: "password123",
   name: "Hardik",
   major: "Computer Science",
   year: "4th Year",
-  email: "hardik@university.edu",
   avatar: "https://api.dicebear.com/9.x/adventurer/svg?seed=tk8uon",
   rating: 4.9,
   rank: 12,
@@ -204,9 +205,26 @@ async function initDb() {
     const listingsCount = await Listing.countDocuments();
     if (listingsCount === 0) {
       await Listing.insertMany(DEFAULT_LISTINGS);
-      await Profile.create(DEFAULT_PROFILE);
+      
+      const aaravProfile = {
+        email: "student@university.edu",
+        password: "password123",
+        name: "Aarav Sharma",
+        major: "Mechanical Engineering",
+        year: "2nd Year",
+        avatar: "https://api.dicebear.com/9.x/adventurer/svg?seed=Aarav",
+        rating: 4.8,
+        rank: 45,
+        points: 320,
+        listingsCount: 1,
+        salesCount: 2,
+        purchasedCount: 5,
+        isAdmin: false
+      };
+      
+      await Profile.create([DEFAULT_PROFILE, aaravProfile]);
       await MessageThread.insertMany(DEFAULT_MESSAGES);
-      await Favorite.create({ listingId: 'lst-2' });
+      await Favorite.create({ userEmail: 'hardik@university.edu', listingId: 'lst-2' });
       console.log('MongoDB successfully seeded with default data.');
     }
   } catch (err) {
