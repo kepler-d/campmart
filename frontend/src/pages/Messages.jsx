@@ -1,6 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { getMessages, saveMessages } from '../db';
+import { getMessages, saveMessages, getProfile } from '../db';
+import { io } from 'socket.io-client';
+
+const socket = io('http://localhost:5000');
 
 export default function Messages() {
   const location = useLocation();
@@ -13,6 +16,11 @@ export default function Messages() {
   const [inputMessage, setInputMessage] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [currentUser, setCurrentUser] = useState(null);
+
+  useEffect(() => {
+    getProfile().then(setCurrentUser);
+  }, []);
 
   // Sync threads and select active conversation
   useEffect(() => {
@@ -37,7 +45,26 @@ export default function Messages() {
       setThreads(await getMessages());
     };
     window.addEventListener('messagesUpdated', handleMessagesUpdate);
-    return () => window.removeEventListener('messagesUpdated', handleMessagesUpdate);
+    
+    // Socket.io listener
+    const handleReceiveMessage = (data) => {
+      setThreads(prevThreads => prevThreads.map(t => {
+        if (t.threadId === data.threadId) {
+          return {
+            ...t,
+            messages: [...t.messages, { sender: data.sender, text: data.text, time: data.time }]
+          };
+        }
+        return t;
+      }));
+    };
+    
+    socket.on('receiveMessage', handleReceiveMessage);
+
+    return () => {
+      window.removeEventListener('messagesUpdated', handleMessagesUpdate);
+      socket.off('receiveMessage', handleReceiveMessage);
+    };
   }, []);
 
   const activeThread = threads.find(t => t.threadId === activeThreadId);
@@ -58,49 +85,17 @@ export default function Messages() {
     const text = inputMessage.trim();
     if (!text || !activeThreadId) return;
 
-    const updatedThreads = threads.map(t => {
-      if (t.threadId === activeThreadId) {
-        const timeString = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        return {
-          ...t,
-          messages: [...t.messages, { sender: 'me', text, time: timeString }]
-        };
-      }
-      return t;
+    const timeString = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    
+    socket.emit('sendMessage', {
+      threadId: activeThreadId,
+      sender: currentUser?.name === 'Hardik' ? 'me' : 'them',
+      text,
+      time: timeString,
+      clientId: socket.id
     });
 
-    setThreads(updatedThreads);
-    saveMessages(updatedThreads); // Let it fire and forget
     setInputMessage('');
-
-    // Simulate Typing Auto-Responder
-    setIsTyping(true);
-    setTimeout(async () => {
-      setIsTyping(false);
-      const replies = [
-        "Yeah, sounds perfect! See you then.",
-        "Awesome! I will check the fit and let you know.",
-        "Does 4:00 PM work for you instead?",
-        "Sounds good, I'll bring the charger too.",
-        "Perfect, thanks! See you on campus."
-      ];
-      const randomReply = replies[Math.floor(Math.random() * replies.length)];
-
-      const currentThreads = await getMessages();
-      const threadsAfterReply = currentThreads.map(t => {
-        if (t.threadId === activeThreadId) {
-          const timeString = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-          return {
-            ...t,
-            messages: [...t.messages, { sender: 'them', text: randomReply, time: timeString }]
-          };
-        }
-        return t;
-      });
-
-      setThreads(threadsAfterReply);
-      saveMessages(threadsAfterReply);
-    }, 1500);
   };
 
   const handleKeyDown = (e) => {
@@ -163,7 +158,10 @@ export default function Messages() {
               const lastMsgText = lastMsg ? lastMsg.text : 'No messages yet';
               const lastMsgTime = lastMsg ? lastMsg.time : '';
               
-              const initials = thread.senderName
+              const displaySenderName = thread.senderName === currentUser?.name ? "Hardik (Admin)" : thread.senderName;
+              const displaySenderAvatar = thread.senderName === currentUser?.name ? "https://api.dicebear.com/9.x/adventurer/svg?seed=bbnm8e" : thread.senderAvatar;
+
+              const initials = displaySenderName
                 .split(' ')
                 .map(n => n[0])
                 .join('')
@@ -177,8 +175,8 @@ export default function Messages() {
                 >
                   <div className="relative flex-shrink-0">
                     <div className="w-12 h-12 rounded-full overflow-hidden border border-outline-variant/20 shadow-sm flex items-center justify-center bg-surface-container-high text-on-surface-variant font-bold">
-                      {thread.senderAvatar ? (
-                        <img alt={thread.senderName} className="w-full h-full object-cover" src={thread.senderAvatar} />
+                      {displaySenderAvatar ? (
+                        <img alt={displaySenderName} className="w-full h-full object-cover" src={displaySenderAvatar} />
                       ) : (
                         initials
                       )}
@@ -188,7 +186,7 @@ export default function Messages() {
                   <div className="flex-grow overflow-hidden">
                     <div className="flex justify-between items-baseline mb-xs">
                       <h3 className={`font-label-md text-label-md ${isActive ? 'font-bold text-primary' : 'font-medium text-on-surface'} truncate`}>
-                        {thread.senderName}
+                        {displaySenderName}
                       </h3>
                       <span className={`font-label-sm text-label-sm shrink-0 ${isActive ? 'text-primary font-semibold' : 'text-outline'}`}>
                         {lastMsgTime}
@@ -208,16 +206,20 @@ export default function Messages() {
       {/* Right Column: Active Chat Window */}
       <section className="flex flex-col flex-grow bg-surface-container-lowest relative h-full overflow-hidden">
         {activeThread ? (
+          (() => {
+            const activeDisplayName = activeThread.senderName === currentUser?.name ? "Hardik (Admin)" : activeThread.senderName;
+            const activeDisplayAvatar = activeThread.senderName === currentUser?.name ? "https://api.dicebear.com/9.x/adventurer/svg?seed=bbnm8e" : activeThread.senderAvatar;
+            return (
           <>
             {/* Chat Header */}
             <header className="h-[88px] px-lg border-b border-outline-variant/20 flex items-center justify-between bg-surface/80 backdrop-blur-xl z-20 shrink-0">
               <div className="flex items-center gap-md">
                 <div className="relative">
                   <div className="w-12 h-12 rounded-full overflow-hidden shadow-sm flex items-center justify-center bg-surface-container-high text-on-surface-variant font-headline-md text-headline-md border border-outline-variant/20">
-                    {activeThread.senderAvatar ? (
-                      <img alt={activeThread.senderName} className="w-full h-full object-cover" src={activeThread.senderAvatar} />
+                    {activeDisplayAvatar ? (
+                      <img alt={activeDisplayName} className="w-full h-full object-cover" src={activeDisplayAvatar} />
                     ) : (
-                      activeThread.senderName.split(' ').map(n => n[0]).join('').slice(0, 2)
+                      activeDisplayName.split(' ').map(n => n[0]).join('').slice(0, 2)
                     )}
                   </div>
                   {activeThread.online && (
@@ -226,7 +228,7 @@ export default function Messages() {
                 </div>
                 <div>
                   <h2 className="font-headline-md text-headline-md text-on-surface leading-none mb-1 font-bold">
-                    {activeThread.senderName}
+                    {activeDisplayName}
                   </h2>
                   <span className="font-label-sm text-label-sm flex items-center gap-1">
                     {activeThread.online ? (
@@ -239,7 +241,7 @@ export default function Messages() {
               </div>
               <div className="flex items-center gap-sm">
                 <button 
-                  onClick={() => alert(`Initiating mock voice call to ${activeThread.senderName}...`)}
+                  onClick={() => alert(`Initiating mock voice call to ${activeDisplayName}...`)}
                   className="w-10 h-10 rounded-full hover:bg-surface-container flex items-center justify-center text-outline transition-colors border-0 bg-transparent cursor-pointer"
                 >
                   <span className="material-symbols-outlined">call</span>
@@ -277,7 +279,8 @@ export default function Messages() {
 
               {/* Chat history list */}
               {activeThread.messages.map((msg, index) => {
-                const isMe = msg.sender === 'me';
+                const isAdmin = currentUser ? currentUser.name === 'Hardik' : true;
+                const isMe = isAdmin ? msg.sender === 'me' : msg.sender === 'them';
                 if (isMe) {
                   return (
                     <div key={index} className="flex items-end gap-2 self-end max-w-[75%] mt-sm">
@@ -290,10 +293,10 @@ export default function Messages() {
                   return (
                     <div key={index} className="flex items-end gap-2 self-start max-w-[75%] mt-sm">
                       <div className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0 mb-1 shadow-sm flex items-center justify-center border border-outline-variant/10 bg-surface-container-high font-bold text-xs text-on-surface-variant">
-                        {activeThread.senderAvatar ? (
-                          <img alt={activeThread.senderName} className="w-full h-full object-cover" src={activeThread.senderAvatar} />
+                        {activeDisplayAvatar ? (
+                          <img alt={activeDisplayName} className="w-full h-full object-cover" src={activeDisplayAvatar} />
                         ) : (
-                          activeThread.senderName.split(' ').map(n => n[0]).join('').slice(0, 2)
+                          activeDisplayName.split(' ').map(n => n[0]).join('').slice(0, 2)
                         )}
                       </div>
                       <div className="bg-white px-4 py-3 rounded-2xl rounded-bl-sm shadow-sm border border-outline-variant/10">
@@ -359,6 +362,8 @@ export default function Messages() {
               </div>
             </div>
           </>
+            );
+          })()
         ) : (
           <div className="flex-grow flex flex-col items-center justify-center text-outline">
             <span className="material-symbols-outlined text-[64px] mb-4">chat</span>

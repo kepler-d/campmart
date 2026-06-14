@@ -73,7 +73,7 @@ export default function Dashboard() {
             rentPrice: 10.00,
             condition: "Good",
             rating: 5.0,
-            image: "https://images.unsplash.com/photo-1611078776822-0d1fc0d1d231?auto=format&fit=crop&w=400",
+            image: "https://images.unsplash.com/photo-1518133835878-5a93cc3f89e5?auto=format&fit=crop&w=400",
             seller: p.name,
             sellerAvatar: p.avatar,
             description: "Calculator in great working condition. Includes charger."

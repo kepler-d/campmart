@@ -1,10 +1,20 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+const http = require('http');
+const { Server } = require('socket.io');
 const apiRoutes = require('./routes/api');
-const { initDb } = require('./db');
+const { initDb, MessageThread } = require('./db');
 
 const app = express();
+const server = http.createServer(app);
+const io = new Server(server, {
+  cors: {
+    origin: "*",
+    methods: ["GET", "POST"]
+  }
+});
+
 const PORT = process.env.PORT || 5000;
 
 app.use(cors());
@@ -13,9 +23,39 @@ app.use(express.urlencoded({ limit: '10mb', extended: true }));
 
 app.use('/api', apiRoutes);
 
+// Socket.io logic
+io.on('connection', (socket) => {
+  console.log('A user connected:', socket.id);
+
+  socket.on('joinThread', (threadId) => {
+    socket.join(threadId);
+    console.log(`User ${socket.id} joined thread ${threadId}`);
+  });
+
+  socket.on('sendMessage', async (data) => {
+    try {
+      const { threadId, sender, text, time } = data;
+      // Append the new message to the thread in DB
+      await MessageThread.updateOne(
+        { threadId },
+        { $push: { messages: { sender, text, time } } }
+      );
+      
+      // Broadcast the message so all clients update their UI
+      io.emit('receiveMessage', data);
+    } catch (err) {
+      console.error('Error saving message:', err);
+    }
+  });
+
+  socket.on('disconnect', () => {
+    console.log('User disconnected:', socket.id);
+  });
+});
+
 // Initialize database then start server
 initDb().then(() => {
-  app.listen(PORT, () => {
+  server.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
   });
 }).catch(err => {
