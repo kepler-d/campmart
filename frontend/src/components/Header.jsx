@@ -1,26 +1,31 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
-import { getProfile } from '../db';
+import { getProfile, getNotifications, markNotificationRead } from '../db';
 
 export default function Header() {
   const [profile, setProfile] = useState({});
   const [isLoggedIn, setIsLoggedIn] = useState(localStorage.getItem('is_logged_in') === 'true');
   const [searchVal, setSearchVal] = useState('');
-  const [isDarkMode, setIsDarkMode] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
+
+  const [notifications, setNotifications] = useState([]);
+  const [showNotifications, setShowNotifications] = useState(false);
 
   useEffect(() => {
     const syncAuth = async () => {
       setIsLoggedIn(localStorage.getItem('is_logged_in') === 'true');
       setProfile(await getProfile());
+      setNotifications(await getNotifications());
     };
     syncAuth();
     window.addEventListener('authChanged', syncAuth);
     window.addEventListener('profileChanged', syncAuth);
+    window.addEventListener('notificationsUpdated', syncAuth);
     return () => {
       window.removeEventListener('authChanged', syncAuth);
       window.removeEventListener('profileChanged', syncAuth);
+      window.removeEventListener('notificationsUpdated', syncAuth);
     };
   }, []);
 
@@ -30,27 +35,11 @@ export default function Header() {
     if (savedTheme === 'dark') {
       document.documentElement.classList.add('dark');
       document.documentElement.classList.remove('light');
-      setIsDarkMode(true);
     } else {
       document.documentElement.classList.add('light');
       document.documentElement.classList.remove('dark');
-      setIsDarkMode(false);
     }
   }, []);
-
-  const toggleTheme = () => {
-    if (document.documentElement.classList.contains('dark')) {
-      document.documentElement.classList.remove('dark');
-      document.documentElement.classList.add('light');
-      localStorage.setItem('theme', 'light');
-      setIsDarkMode(false);
-    } else {
-      document.documentElement.classList.remove('light');
-      document.documentElement.classList.add('dark');
-      localStorage.setItem('theme', 'dark');
-      setIsDarkMode(true);
-    }
-  };
 
   const handleSearchKeyDown = (e) => {
     if (e.key === 'Enter') {
@@ -95,22 +84,49 @@ export default function Header() {
 
         {/* Trailing Actions */}
         <div class="flex items-center gap-sm md:gap-md shrink-0">
-          {/* Theme Toggle Button */}
-          <button 
-            id="theme-toggle"
-            onClick={toggleTheme}
-            className="text-on-surface-variant hover:bg-surface-container-low hover:text-primary p-2 rounded-full transition-colors active:scale-95 duration-100"
-          >
-            <span className="material-symbols-outlined">
-              {isDarkMode ? 'light_mode' : 'dark_mode'}
-            </span>
-          </button>
-
           {/* Notifications Button */}
-          <button className="text-on-surface-variant hover:bg-surface-container-low hover:text-primary p-2 rounded-full transition-colors relative active:scale-95 duration-100">
-            <span className="material-symbols-outlined">notifications</span>
-            <span className="absolute top-2 right-2 w-2 h-2 bg-error rounded-full border-2 border-surface"></span>
-          </button>
+          <div className="relative">
+            <button 
+              onClick={() => setShowNotifications(!showNotifications)}
+              className="text-on-surface-variant hover:bg-surface-container-low hover:text-primary p-2 rounded-full transition-colors relative active:scale-95 duration-100"
+            >
+              <span className="material-symbols-outlined">notifications</span>
+              {notifications.some(n => !n.read) && (
+                <span className="absolute top-2 right-2 w-2 h-2 bg-error rounded-full border-2 border-surface"></span>
+              )}
+            </button>
+            {showNotifications && (
+              <div className="absolute right-0 mt-2 w-80 bg-surface border border-outline-variant/30 shadow-lg rounded-xl overflow-hidden z-50">
+                <div className="p-3 border-b border-outline-variant/30 bg-surface-container-lowest font-headline-sm text-sm font-bold">
+                  Notifications
+                </div>
+                <div className="max-h-80 overflow-y-auto">
+                  {notifications.length === 0 ? (
+                    <div className="p-4 text-center text-sm text-on-surface-variant">No notifications</div>
+                  ) : (
+                    notifications.map(notif => (
+                      <div 
+                        key={notif._id} 
+                        onClick={() => {
+                          markNotificationRead(notif._id);
+                          if (notif.link) {
+                            navigate(notif.link);
+                            setShowNotifications(false);
+                          }
+                        }}
+                        className={`p-3 border-b border-outline-variant/10 text-sm cursor-pointer hover:bg-surface-container-lowest transition-colors ${notif.read ? 'opacity-70' : 'bg-primary/5'}`}
+                      >
+                        <p className="text-on-surface mb-1">{notif.message}</p>
+                        <p className="text-[10px] text-outline">
+                          {new Date(notif.createdAt).toLocaleDateString()}
+                        </p>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
 
           {/* Favorites Button */}
           <Link 

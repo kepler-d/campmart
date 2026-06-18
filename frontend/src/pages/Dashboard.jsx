@@ -2,28 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { getListings, saveListings, getProfile, saveProfile, getFavorites, toggleFavorite } from '../db';
 
-const DEFAULT_RENTALS = [
-  {
-    id: "rnt-1",
-    title: "Wacom Intuos Pro Drawing Tablet",
-    image: "https://api.dicebear.com/9.x/adventurer/svg?seed=m97y3e",
-    type: "borrowed",
-    partner: "Sarah Jenkins",
-    dueDate: "2026-06-15",
-    daysRemaining: 6,
-    totalDays: 14
-  },
-  {
-    id: "rnt-2",
-    title: "Calculus: Early Transcendentals, 9th Edition",
-    image: "https://api.dicebear.com/9.x/adventurer/svg?seed=3714rh",
-    type: "lent",
-    partner: "Alex Chen",
-    dueDate: "2026-06-25",
-    daysRemaining: 16,
-    totalDays: 30
-  }
-];
+const DEFAULT_RENTALS = [];
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -49,57 +28,11 @@ export default function Dashboard() {
       setListings(l);
       setFavorites(await getFavorites());
 
-      // 1. Seed user listings if empty
-      const userOwned = l.filter(item => item.seller === p.name);
-      if (userOwned.length === 0 && p.name) {
-        const mockListings = [
-          {
-            id: "lst-h1",
-            title: "Introduction to Algorithms (CLRS), 4th Edition",
-            category: "Textbooks",
-            price: 65.00,
-            condition: "Like New",
-            rating: 4.9,
-            image: "https://images.unsplash.com/photo-1588580000645-4562a6d2c839?auto=format&fit=crop&w=400",
-            seller: p.name,
-            sellerAvatar: p.avatar,
-            description: "Used for CS 301. Minimal markings, like new condition. Can deliver on campus."
-          },
-          {
-            id: "lst-h2",
-            title: "TI-84 Plus CE Graphing Calculator",
-            category: "Electronics",
-            price: 85.00,
-            rentPrice: 10.00,
-            condition: "Good",
-            rating: 5.0,
-            image: "https://images.unsplash.com/photo-1518133835878-5a93cc3f89e5?auto=format&fit=crop&w=400",
-            seller: p.name,
-            sellerAvatar: p.avatar,
-            description: "Calculator in great working condition. Includes charger."
-          },
-          {
-            id: "lst-h3",
-            title: "Computer Science Study Desk Lamp",
-            category: "Furniture",
-            price: 15.00,
-            condition: "Fair",
-            rating: 4.0,
-            image: "https://images.unsplash.com/photo-1513506003901-1e6a229e2d15?auto=format&fit=crop&w=400",
-            seller: p.name,
-            sellerAvatar: p.avatar,
-            description: "Basic desk lamp. Works fine, bulb included."
-          }
-        ];
-        const combined = [...mockListings, ...l];
-        await saveListings(combined);
-        setListings(combined);
-      }
-
+      // 1. Removed mock listings seeding as per user request to start at zero.
       // 2. Load rentals from storage or seed
-      const savedRentals = localStorage.getItem("campus_rentals");
+      const savedRentals = localStorage.getItem("campus_rentals_v2");
       if (!savedRentals) {
-        localStorage.setItem("campus_rentals", JSON.stringify(DEFAULT_RENTALS));
+        localStorage.setItem("campus_rentals_v2", JSON.stringify(DEFAULT_RENTALS));
         setRentals(DEFAULT_RENTALS);
       } else {
         setRentals(JSON.parse(savedRentals));
@@ -195,7 +128,7 @@ export default function Dashboard() {
   };
 
   // Sales Made estimate
-  const salesMadeTotal = (profile.salesCount || 8) * 40.00;
+  const salesMadeTotal = (profile.salesCount || 0) * 40.00;
 
   return (
     <div className="p-margin-mobile md:p-margin-desktop w-full max-w-max-width mx-auto flex flex-col gap-lg pb-24 pt-6">
@@ -223,7 +156,7 @@ export default function Dashboard() {
           </div>
           <div>
             <p className="font-label-sm text-[11px] text-primary uppercase tracking-widest font-extrabold">Trust Ranking</p>
-            <p className="font-headline-md text-lg font-bold text-on-surface">Top 12% ({profile.points ? profile.points.toLocaleString() : '1,540'} pts)</p>
+            <p className="font-headline-md text-lg font-bold text-on-surface">{profile.points > 0 ? 'Top 12%' : 'New Seller'} ({profile.points ? profile.points.toLocaleString() : '0'} pts)</p>
           </div>
         </div>
       </section>
@@ -412,10 +345,10 @@ export default function Dashboard() {
                 className="bg-surface-container-lowest border border-outline-variant/30 rounded-xl overflow-hidden shadow-sm flex flex-col relative group hover:-translate-y-0.5 transition-transform"
               >
                 <button 
-                  onClick={() => handleUnfavorite(item.id)}
-                  className="absolute top-2 right-2 z-10 p-1.5 bg-surface/85 backdrop-blur-md rounded-full text-error icon-fill shadow-sm border-0 cursor-pointer active:scale-90"
+                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleUnfavorite(item.id); }}
+                  className="absolute top-2 right-2 z-20 p-1.5 bg-surface/85 backdrop-blur-md rounded-full text-error shadow-sm border-0 cursor-pointer active:scale-90"
                 >
-                  <span className="material-symbols-outlined text-[18px]">favorite</span>
+                  <span className="material-symbols-outlined text-[18px] icon-fill">favorite</span>
                 </button>
                 <Link to={`/product/${item.id}`} className="aspect-[4/3] bg-surface-variant overflow-hidden cursor-pointer">
                   <img alt={item.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" src={item.image}/>

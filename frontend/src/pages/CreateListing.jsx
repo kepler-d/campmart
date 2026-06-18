@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getListings, saveListings, getProfile, saveProfile } from '../db';
+import { saveListing, getProfile, saveProfile } from '../db';
 
 const RANDOM_IMAGES = [
   "https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&q=80&w=400",
@@ -23,7 +23,9 @@ export default function CreateListing() {
   const [price, setPrice] = useState('120.00');
   const [rentPrice, setRentPrice] = useState('');
   const [rentOnly, setRentOnly] = useState(false);
-  const [imageUrl, setImageUrl] = useState(RANDOM_IMAGES[0]);
+  const [imageUrls, setImageUrls] = useState([RANDOM_IMAGES[0]]);
+  const [newImageUrl, setNewImageUrl] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Read local image file and convert to base64
   const handleImageFileChange = (e) => {
@@ -31,7 +33,7 @@ export default function CreateListing() {
     if (file) {
       const reader = new FileReader();
       reader.onload = (event) => {
-        setImageUrl(event.target.result);
+        setImageUrls([...imageUrls, event.target.result]);
       };
       reader.readAsDataURL(file);
     }
@@ -40,13 +42,24 @@ export default function CreateListing() {
   // Set random mock image
   const loadRandomImage = () => {
     const randomIndex = Math.floor(Math.random() * RANDOM_IMAGES.length);
-    setImageUrl(RANDOM_IMAGES[randomIndex]);
+    setImageUrls([...imageUrls, RANDOM_IMAGES[randomIndex]]);
+  };
+
+  const handleAddImageUrl = () => {
+    if (newImageUrl.trim()) {
+      setImageUrls([...imageUrls, newImageUrl.trim()]);
+      setNewImageUrl('');
+    }
+  };
+
+  const removeImage = (index) => {
+    setImageUrls(imageUrls.filter((_, i) => i !== index));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setIsSubmitting(true);
 
-    const listings = await getListings();
     const profile = await getProfile();
 
     const buyPrice = parseFloat(price);
@@ -61,17 +74,16 @@ export default function CreateListing() {
       isRentOnly: rentOnly || undefined,
       rentInterval: rentOnly ? 'mo' : undefined,
       condition: condition,
-      rating: 5.0,
-      image: imageUrl,
+      rating: 0.0,
+      image: imageUrls.length > 0 ? imageUrls[0] : '',
+      images: imageUrls,
       seller: profile.name || 'Hardik',
       sellerEmail: profile.email,
       sellerAvatar: profile.avatar || '',
       description: desc
     };
 
-    // Prepend new listing to lists
-    listings.unshift(newListing);
-    await saveListings(listings);
+    await saveListing(newListing);
 
     // Update profile listings count
     const updatedProfile = {
@@ -173,25 +185,48 @@ export default function CreateListing() {
                 
                 {/* 1. Add Image */}
                 <div>
-                  <h2 className="font-headline-md text-headline-md mb-md">1. Add Photo</h2>
+                  <h2 className="font-headline-md text-headline-md mb-md">1. Add Photos</h2>
                   <div className="flex flex-col gap-sm">
+                    {imageUrls.length > 0 && (
+                      <div className="flex flex-wrap gap-3 mb-2">
+                        {imageUrls.map((url, idx) => (
+                          <div key={idx} className="relative w-20 h-20 rounded-lg overflow-hidden border border-outline-variant group shadow-sm">
+                            <img src={url} alt={`Preview ${idx + 1}`} className="w-full h-full object-cover" />
+                            <button 
+                              type="button" 
+                              onClick={() => removeImage(idx)}
+                              className="absolute top-1 right-1 bg-surface/80 rounded-full p-0.5 text-error opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center shadow-sm hover:bg-error hover:text-on-error"
+                            >
+                              <span className="material-symbols-outlined text-[14px]">close</span>
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                     <div className="flex gap-md">
                       <input 
                         type="text" 
-                        value={imageUrl}
-                        onChange={(e) => setImageUrl(e.target.value)}
+                        value={newImageUrl}
+                        onChange={(e) => setNewImageUrl(e.target.value)}
                         className="flex-grow rounded-lg border border-outline-variant bg-surface-container-lowest px-md py-3 text-body-md font-body-md outline-none" 
                         placeholder="Paste image URL here, or load a random image..." 
                       />
                       <button 
                         type="button" 
+                        onClick={handleAddImageUrl}
+                        className="px-md py-3 bg-primary text-on-primary rounded-lg font-label-md text-label-md hover:bg-primary/90 transition-colors border-0 cursor-pointer active:scale-95 duration-100 shadow-sm"
+                      >
+                        Add URL
+                      </button>
+                      <button 
+                        type="button" 
                         onClick={loadRandomImage}
-                        className="px-md py-3 bg-secondary text-on-secondary rounded-lg font-label-md text-label-md hover:bg-secondary/90 transition-colors border-0 cursor-pointer active:scale-95 duration-100"
+                        className="px-md py-3 bg-secondary text-on-secondary rounded-lg font-label-md text-label-md hover:bg-secondary/90 transition-colors border-0 cursor-pointer active:scale-95 duration-100 shadow-sm"
                       >
                         Load Random
                       </button>
                     </div>
-                    <p className="text-[12px] text-outline">Optionally, select a local image file:</p>
+                    <p className="text-[12px] text-outline mt-1">Optionally, select a local image file:</p>
                     <input 
                       type="file" 
                       accept="image/*" 
@@ -354,11 +389,11 @@ export default function CreateListing() {
               
               {/* Image box */}
               <div className="relative w-full aspect-[4/3] bg-surface-container-high overflow-hidden flex items-center justify-center">
-                {imageUrl ? (
+                {imageUrls.length > 0 ? (
                   <img 
                     alt="Preview object" 
                     className="w-full h-full object-cover" 
-                    src={imageUrl} 
+                    src={imageUrls[0]} 
                   />
                 ) : (
                   <div className="flex flex-col items-center justify-center text-outline">
@@ -381,7 +416,7 @@ export default function CreateListing() {
                   </span>
                   <div className="flex items-center text-outline text-[12px]">
                     <span className="material-symbols-outlined text-[14px] icon-fill text-tertiary-fixed-dim mr-0.5">star</span>
-                    5.0
+                    0.0
                   </div>
                 </div>
 

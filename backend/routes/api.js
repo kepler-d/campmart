@@ -3,7 +3,7 @@ const router = express.Router();
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const nodemailer = require('nodemailer');
-const { getDb, Listing, Profile, MessageThread, Favorite, AllowedDomain, CampusRequest } = require('../db');
+const { getDb, Listing, Profile, MessageThread, Favorite, AllowedDomain, CampusRequest, Notification } = require('../db');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'supersecret_campus_key';
 
@@ -27,7 +27,7 @@ nodemailer.createTestAccount((err, account) => {
 
 // In-memory cache to speed up reads and reduce MongoDB Atlas latency
 const cache = {
-  listings: null,
+  listings: {},
   profile: {},
   messages: null,
   favorites: {}
@@ -177,10 +177,21 @@ router.post('/auth/login', async (req, res) => {
 router.get('/listings', async (req, res) => {
   await getDb();
   try {
-    if (cache.listings) return res.json(cache.listings);
-    // Return listings without the internal mongo _id and __v
-    const listings = await Listing.find({}, { _id: 0, __v: 0 }).lean();
-    cache.listings = listings;
+    const { email } = req.query;
+    const domain = email ? '@' + email.split('@')[1] : null;
+
+    if (domain && cache.listings && cache.listings[domain]) {
+      return res.json(cache.listings[domain]);
+    }
+
+    const query = domain ? { domain } : {};
+    const listings = await Listing.find(query, { _id: 0, __v: 0 }).lean();
+    
+    if (domain) {
+      if (!cache.listings) cache.listings = {};
+      cache.listings[domain] = listings;
+    }
+
     res.json(listings);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -195,14 +206,20 @@ router.post('/listings', async (req, res) => {
     if (Array.isArray(newListings)) {
       await Listing.deleteMany({});
       await Listing.insertMany(newListings);
+      cache.listings = {}; // Invalidate entire cache
     } else {
+      if (newListings.sellerEmail) {
+        newListings.domain = '@' + newListings.sellerEmail.split('@')[1];
+      }
       await Listing.findOneAndUpdate(
         { id: newListings.id },
         newListings,
         { upsert: true, new: true }
       );
+      if (newListings.domain && cache.listings) {
+        delete cache.listings[newListings.domain];
+      }
     }
-    cache.listings = null; // Invalidate cache
     res.json({ success: true });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -347,6 +364,42 @@ router.post('/favorites/toggle', async (req, res) => {
       delete cache.favorites[userEmail]; // Invalidate cache
       res.json({ isFavorite: true });
     }
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// --- NOTIFICATIONS ---
+router.get('/notifications', async (req, res) => {
+  await getDb();
+  const { email } = req.query;
+  if (!email) return res.json([]);
+
+  try {
+    const notifs = await Notification.find({ userEmail: email }).sort({ createdAt: -1 }).lean();
+    res.json(notifs);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.post('/notifications', async (req, res) => {
+  await getDb();
+  try {
+    const { userEmail, message, link } = req.body;
+    const newNotif = await Notification.create({ userEmail, message, link });
+    res.json({ success: true, notification: newNotif });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.post('/notifications/read', async (req, res) => {
+  await getDb();
+  try {
+    const { notificationId } = req.body;
+    await Notification.findByIdAndUpdate(notificationId, { read: true });
+    res.json({ success: true });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

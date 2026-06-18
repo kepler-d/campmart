@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { getListings, getFavorites, toggleFavorite, getProfile, createMessageThread } from '../db';
+import { getListings, getFavorites, toggleFavorite, getProfile, createMessageThread, createNotification } from '../db';
 
 export default function ProductDetails() {
   const { id } = useParams();
@@ -9,6 +9,10 @@ export default function ProductDetails() {
   // Load state
   const [listings, setListings] = useState([]);
   const [favorites, setFavorites] = useState([]);
+  const [showTransactionModal, setShowTransactionModal] = useState(false);
+  const [mainImageIndex, setMainImageIndex] = useState(0);
+  const [pickupLocation, setPickupLocation] = useState('Student Union Building');
+  const [customPickupLocation, setCustomPickupLocation] = useState('');
 
   useEffect(() => {
     const fetchInitialData = async () => {
@@ -24,6 +28,7 @@ export default function ProductDetails() {
   useEffect(() => {
     // Scroll to top on page navigation
     window.scrollTo(0, 0);
+    setMainImageIndex(0);
   }, [id]);
 
   useEffect(() => {
@@ -64,7 +69,25 @@ export default function ProductDetails() {
   };
 
   const handleBuyClick = () => {
-    alert(`Thank you for purchasing "${product.title}"! Your transaction is being processed.`);
+    setShowTransactionModal(true);
+  };
+
+  const handleConfirmPurchase = async () => {
+    const profile = await getProfile();
+    if (!profile || !profile.email) {
+      navigate('/login');
+      return;
+    }
+    
+    // Notify seller
+    const sellerEmail = product.sellerEmail || product.seller.toLowerCase().replace(' ', '.') + '@indoreinstitute.com';
+    const finalLocation = pickupLocation === 'Other' ? customPickupLocation : pickupLocation;
+    const message = `${profile.name} has purchased your item: "${product.title}". Requested pickup: ${finalLocation}`;
+    const link = `/messages`; // Simplified, could point to order details
+    await createNotification(sellerEmail, message, link);
+    
+    setShowTransactionModal(false);
+    alert(`Thank you for purchasing "${product.title}"! The seller has been notified.`);
   };
 
   const handleRentClick = () => {
@@ -108,6 +131,9 @@ export default function ProductDetails() {
     .filter(item => item.category === product.category && item.id !== product.id)
     .slice(0, 3);
 
+  // Handle image arrays (backwards compatibility for single image)
+  const productImages = product.images || (product.image ? [product.image] : ['https://via.placeholder.com/600x450']);
+
   return (
     <div className="p-margin-mobile md:p-margin-desktop w-full max-w-max-width mx-auto flex flex-col pt-6">
       {/* Breadcrumbs */}
@@ -125,7 +151,7 @@ export default function ProductDetails() {
         <div className="lg:col-span-7 flex flex-col gap-md">
           {/* Main Image */}
           <div className="bg-surface-container-lowest rounded-xl border border-outline-variant/30 overflow-hidden relative aspect-[4/3] w-full shadow-sm">
-            <img alt={product.title} className="w-full h-full object-cover" src={product.image || 'https://via.placeholder.com/600x450'} />
+            <img alt={product.title} className="w-full h-full object-cover" src={productImages[mainImageIndex]} />
             
             {/* Badges */}
             <div className="absolute top-4 left-4 flex gap-2">
@@ -139,23 +165,17 @@ export default function ProductDetails() {
             </div>
           </div>
 
-          {/* Dummy Thumbnails to match bento grid style */}
+          {/* Thumbnails */}
           <div className="flex gap-4 overflow-x-auto no-scrollbar pb-2">
-            <button className="flex-shrink-0 w-24 h-24 rounded-lg border-2 border-primary overflow-hidden shadow-sm">
-              <img alt="Thumbnail 1" className="w-full h-full object-cover" src={product.image || 'https://via.placeholder.com/96'} />
-            </button>
-            <button className="flex-shrink-0 w-24 h-24 rounded-lg border border-outline-variant/50 overflow-hidden opacity-70 hover:opacity-100 transition-opacity">
-              <img alt="Thumbnail 2" className="w-full h-full object-cover" src="https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&q=80&w=96" />
-            </button>
-            <button className="flex-shrink-0 w-24 h-24 rounded-lg border border-outline-variant/50 overflow-hidden opacity-70 hover:opacity-100 transition-opacity">
-              <img alt="Thumbnail 3" className="w-full h-full object-cover" src="https://images.unsplash.com/photo-1531403009284-440f080d1e12?auto=format&fit=crop&q=80&w=96" />
-            </button>
-            <button 
-              onClick={() => alert("Upload secondary gallery photos in creation settings.")}
-              className="flex-shrink-0 w-24 h-24 rounded-lg border border-outline-variant/50 overflow-hidden opacity-70 hover:opacity-100 transition-opacity flex items-center justify-center bg-surface-container-low"
-            >
-              <span className="material-symbols-outlined text-outline">add_photo_alternate</span>
-            </button>
+            {productImages.map((imgUrl, idx) => (
+              <button 
+                key={idx}
+                onClick={() => setMainImageIndex(idx)}
+                className={`flex-shrink-0 w-24 h-24 rounded-lg overflow-hidden shadow-sm transition-all duration-200 ${idx === mainImageIndex ? 'border-2 border-primary opacity-100' : 'border border-outline-variant/50 opacity-70 hover:opacity-100'}`}
+              >
+                <img alt={`Thumbnail ${idx + 1}`} className="w-full h-full object-cover" src={imgUrl} />
+              </button>
+            ))}
           </div>
         </div>
 
@@ -213,7 +233,7 @@ export default function ProductDetails() {
               <div className="flex flex-col items-end">
                 <div className="flex items-center text-primary">
                   <span className="material-symbols-outlined icon-fill text-[18px] text-tertiary-fixed-dim">star</span>
-                  <span className="font-label-md text-label-md font-bold ml-1">{product.rating ? product.rating.toFixed(1) : '5.0'}</span>
+                  <span className="font-label-md text-label-md font-bold ml-1">{product.rating ? product.rating.toFixed(1) : '0.0'}</span>
                 </div>
                 <span className="font-label-sm text-label-sm text-on-surface-variant">(42 reviews)</span>
               </div>
@@ -299,6 +319,80 @@ export default function ProductDetails() {
             ))}
           </div>
         </section>
+      )}
+
+      {/* Transaction Modal */}
+      {showTransactionModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-inverse-surface/60 backdrop-blur-sm p-4">
+          <div className="bg-surface rounded-2xl shadow-xl w-full max-w-md overflow-hidden">
+            <div className="p-6">
+              <div className="flex justify-between items-start mb-4">
+                <h3 className="font-headline-md text-xl font-bold text-on-surface">Confirm Purchase</h3>
+                <button 
+                  onClick={() => setShowTransactionModal(false)}
+                  className="text-outline hover:text-on-surface transition-colors"
+                >
+                  <span className="material-symbols-outlined">close</span>
+                </button>
+              </div>
+              <div className="bg-surface-container-low rounded-xl p-4 flex gap-4 mb-6">
+                <img src={productImages[0]} alt="Thumbnail" className="w-16 h-16 object-cover rounded-lg" />
+                <div>
+                  <p className="font-label-md font-bold text-on-surface line-clamp-2">{product.title}</p>
+                  <p className="font-headline-sm text-primary font-bold mt-1">₹{product.price.toFixed(2)}</p>
+                </div>
+              </div>
+              <div className="space-y-4 mb-6">
+                <div>
+                  <label className="block text-sm font-bold text-on-surface-variant mb-1">Pickup Location</label>
+                  <select 
+                    value={pickupLocation}
+                    onChange={(e) => setPickupLocation(e.target.value)}
+                    className="w-full bg-surface-container border border-outline-variant/50 rounded-lg p-2.5 text-on-surface focus:ring-2 focus:ring-primary focus:outline-none mb-2"
+                  >
+                    <option value="Student Union Building">Student Union Building</option>
+                    <option value="Main Library">Main Library</option>
+                    <option value="Computer Science Dept.">Computer Science Dept.</option>
+                    <option value="Other">Other (Specify meeting point)</option>
+                  </select>
+                  {pickupLocation === 'Other' && (
+                    <input 
+                      type="text"
+                      value={customPickupLocation}
+                      onChange={(e) => setCustomPickupLocation(e.target.value)}
+                      placeholder="Enter custom meeting point..."
+                      className="w-full bg-surface-container-lowest border border-outline-variant/50 rounded-lg p-2.5 text-on-surface focus:ring-2 focus:ring-primary focus:outline-none"
+                    />
+                  )}
+                </div>
+                <div>
+                  <label className="block text-sm font-bold text-on-surface-variant mb-1">Payment Method</label>
+                  <select className="w-full bg-surface-container border border-outline-variant/50 rounded-lg p-2.5 text-on-surface focus:ring-2 focus:ring-primary focus:outline-none">
+                    <option>UPI / Campus Pay</option>
+                    <option>Cash on Delivery</option>
+                  </select>
+                </div>
+              </div>
+              <p className="text-xs text-on-surface-variant mb-6 text-center">
+                Clicking confirm will notify the seller to arrange the handover.
+              </p>
+              <div className="flex gap-3">
+                <button 
+                  onClick={() => setShowTransactionModal(false)}
+                  className="flex-1 py-3 rounded-xl border border-outline-variant/50 text-on-surface font-label-md hover:bg-surface-container-low transition-colors"
+                >
+                  Cancel
+                </button>
+                <button 
+                  onClick={handleConfirmPurchase}
+                  className="flex-1 py-3 rounded-xl bg-primary text-on-primary font-label-md font-bold hover:bg-primary/95 transition-colors shadow-sm"
+                >
+                  Confirm
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

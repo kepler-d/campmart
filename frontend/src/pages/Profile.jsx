@@ -273,50 +273,6 @@ export default function Profile() {
         )}
       </section>
 
-      {/* Recent Reviews */}
-      <section>
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="font-headline-md text-headline-md text-on-surface font-black">Recent Reviews</h2>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-gutter">
-          <div className="bg-surface-container-lowest rounded-xl border border-surface-variant p-lg shadow-sm">
-            <div className="flex justify-between items-start mb-4">
-              <div className="flex gap-1 text-tertiary-fixed-dim">
-                {[1, 2, 3, 4, 5].map(n => (
-                  <span key={n} className="material-symbols-outlined icon-fill text-[18px]">star</span>
-                ))}
-              </div>
-              <span className="text-label-sm text-on-surface-variant">1 day ago</span>
-            </div>
-            <p className="font-body-md text-body-md text-on-surface mb-4 leading-relaxed">
-              "Alex was super responsive and met me exactly on time. The textbook was in perfect condition just like the listing said. Would definitely buy from again!"
-            </p>
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center font-bold text-xs">SJ</div>
-              <span className="font-label-md text-on-surface font-semibold">Sarah J.</span>
-            </div>
-          </div>
-          
-          <div className="bg-surface-container-lowest rounded-xl border border-surface-variant p-lg shadow-sm">
-            <div className="flex justify-between items-start mb-4">
-              <div className="flex gap-1 text-tertiary-fixed-dim">
-                {[1, 2, 3, 4].map(n => (
-                  <span key={n} className="material-symbols-outlined icon-fill text-[18px]">star</span>
-                ))}
-                <span className="material-symbols-outlined text-[18px] text-outline">star</span>
-              </div>
-              <span className="text-label-sm text-on-surface-variant">3 days ago</span>
-            </div>
-            <p className="font-body-md text-body-md text-on-surface mb-4 leading-relaxed">
-              "Great transaction. The bike rental was smooth and the bike was well-maintained. Deducted a star just because we had to reschedule the drop-off time, but otherwise excellent."
-            </p>
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-secondary-container text-on-secondary-container flex items-center justify-center font-bold text-xs">MK</div>
-              <span className="font-label-md text-on-surface font-semibold">Mike K.</span>
-            </div>
-          </div>
-        </div>
-      </section>
 
       {/* Edit Profile Modal Dialog */}
       {showEditModal && (

@@ -20,7 +20,7 @@ export default function Marketplace() {
 
   // Filter state variables
   const [mode, setMode] = useState('buy');
-  const [selectedCategories, setSelectedCategories] = useState(['Textbooks', 'Electronics']);
+  const [selectedCategories, setSelectedCategories] = useState([]);
   const [minPrice, setMinPrice] = useState('');
   const [maxPrice, setMaxPrice] = useState('');
   const [selectedConditions, setSelectedConditions] = useState([]);
@@ -299,9 +299,9 @@ export default function Marketplace() {
                   {/* Bookmark Button */}
                   <button 
                     onClick={(e) => handleFavoriteToggle(item.id, e)}
-                    className={`absolute top-3 right-3 z-10 p-2 bg-surface/80 backdrop-blur-md rounded-full shadow-sm active:scale-95 duration-100 transition-colors ${isFav ? 'text-error icon-fill' : 'text-outline hover:text-error'}`}
+                    className={`absolute top-3 right-3 z-20 p-2 bg-surface/80 backdrop-blur-md rounded-full shadow-sm active:scale-95 duration-100 transition-colors ${isFav ? 'text-error' : 'text-outline hover:text-error'}`}
                   >
-                    <span className="material-symbols-outlined text-[20px]">favorite</span>
+                    <span className={`material-symbols-outlined text-[20px] ${isFav ? 'icon-fill' : ''}`}>favorite</span>
                   </button>
                   
                   {/* Image Frame */}

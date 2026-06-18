@@ -65,6 +65,14 @@ const campusRequestSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now }
 });
 
+const notificationSchema = new mongoose.Schema({
+  userEmail: { type: String, required: true },
+  message: { type: String, required: true },
+  read: { type: Boolean, default: false },
+  createdAt: { type: Date, default: Date.now },
+  link: String
+});
+
 // --- Models ---
 const Listing = mongoose.model('Listing', listingSchema);
 const Profile = mongoose.model('Profile', profileSchema);
@@ -72,6 +80,7 @@ const MessageThread = mongoose.model('MessageThread', messageThreadSchema);
 const Favorite = mongoose.model('Favorite', favoriteSchema);
 const AllowedDomain = mongoose.model('AllowedDomain', allowedDomainSchema);
 const CampusRequest = mongoose.model('CampusRequest', campusRequestSchema);
+const Notification = mongoose.model('Notification', notificationSchema);
 
 
 // --- Defaults ---
@@ -83,7 +92,7 @@ const DEFAULT_LISTINGS = [
     price: 45.00,
     rentPrice: 15.00,
     condition: "Like New",
-    rating: 4.8,
+    rating: 0.0,
     image: "https://images.unsplash.com/photo-1532012197267-da84d127e765?auto=format&fit=crop&w=400",
     seller: "Sarah Jenkins",
     sellerAvatar: "https://api.dicebear.com/9.x/adventurer/svg?seed=zh95gy",
@@ -95,7 +104,7 @@ const DEFAULT_LISTINGS = [
     category: "Electronics",
     price: 850.00,
     condition: "Good",
-    rating: 5.0,
+    rating: 0.0,
     image: "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&w=400",
     seller: "Alex Chen",
     sellerAvatar: "https://api.dicebear.com/9.x/adventurer/svg?seed=9puw0m",
@@ -107,7 +116,7 @@ const DEFAULT_LISTINGS = [
     category: "Furniture",
     price: 60.00,
     condition: "Fair",
-    rating: 4.2,
+    rating: 0.0,
     image: "https://images.unsplash.com/photo-1592078615290-033ee584e267?auto=format&fit=crop&w=400",
     seller: "Marcus Johnson",
     sellerAvatar: "",
@@ -121,7 +130,7 @@ const DEFAULT_LISTINGS = [
     isRentOnly: true,
     rentInterval: "wk",
     condition: "Like New",
-    rating: 4.9,
+    rating: 0.0,
     image: "https://images.unsplash.com/photo-1561069934-eeaff9a5933e?auto=format&fit=crop&w=400",
     seller: "Sarah Jenkins",
     sellerAvatar: "https://api.dicebear.com/9.x/adventurer/svg?seed=1sciug",
@@ -133,7 +142,7 @@ const DEFAULT_LISTINGS = [
     category: "Apparel",
     price: 45.00,
     condition: "Good",
-    rating: 4.5,
+    rating: 0.0,
     image: "https://images.unsplash.com/photo-1551028719-00167b16eac5?auto=format&fit=crop&w=400",
     seller: "Sarah Jenkins",
     sellerAvatar: "https://api.dicebear.com/9.x/adventurer/svg?seed=w2f1l",
@@ -149,12 +158,12 @@ const DEFAULT_PROFILE = {
   major: "Computer Science",
   year: "4th Year",
   avatar: "https://api.dicebear.com/9.x/adventurer/svg?seed=tk8uon",
-  rating: 4.9,
-  rank: 12,
-  points: 1540,
-  listingsCount: 4,
-  salesCount: 8,
-  purchasedCount: 14,
+  rating: 0.0,
+  rank: 0,
+  points: 0,
+  listingsCount: 0,
+  salesCount: 0,
+  purchasedCount: 0,
   isAdmin: true
 };
 
@@ -234,12 +243,12 @@ async function initDb() {
         major: "Mechanical Engineering",
         year: "2nd Year",
         avatar: "https://api.dicebear.com/9.x/adventurer/svg?seed=Aarav",
-        rating: 4.8,
-        rank: 45,
-        points: 320,
-        listingsCount: 1,
-        salesCount: 2,
-        purchasedCount: 5,
+        rating: 0.0,
+        rank: 0,
+        points: 0,
+        listingsCount: 0,
+        salesCount: 0,
+        purchasedCount: 0,
         isAdmin: false
       };
       
@@ -268,5 +277,6 @@ module.exports = {
   MessageThread,
   Favorite,
   AllowedDomain,
-  CampusRequest
+  CampusRequest,
+  Notification
 };

@@ -84,11 +84,26 @@ export async function approveCampusRequest(requestId) {
 
 export async function getListings() {
   try {
-    const res = await fetch(`${API_URL}/listings`);
+    const email = localStorage.getItem('user_email');
+    const url = email ? `${API_URL}/listings?email=${encodeURIComponent(email)}` : `${API_URL}/listings`;
+    const res = await fetch(url);
     return await res.json();
   } catch (err) {
     console.error('Failed to fetch listings:', err);
     return [];
+  }
+}
+
+export async function saveListing(listing) {
+  try {
+    await fetch(`${API_URL}/listings`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(listing)
+    });
+    window.dispatchEvent(new Event('listingsUpdated'));
+  } catch (err) {
+    console.error('Failed to save listing:', err);
   }
 }
 
@@ -208,5 +223,43 @@ export async function toggleFavorite(listingId) {
   } catch (err) {
     console.error('Failed to toggle favorite:', err);
     return false;
+  }
+}
+
+export async function getNotifications() {
+  try {
+    const email = localStorage.getItem('user_email');
+    if (!email) return [];
+    const res = await fetch(`${API_URL}/notifications?email=${encodeURIComponent(email)}`);
+    return await res.json();
+  } catch (err) {
+    console.error('Failed to fetch notifications:', err);
+    return [];
+  }
+}
+
+export async function markNotificationRead(notificationId) {
+  try {
+    await fetch(`${API_URL}/notifications/read`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ notificationId })
+    });
+    window.dispatchEvent(new Event('notificationsUpdated'));
+  } catch (err) {
+    console.error('Failed to mark notification as read:', err);
+  }
+}
+
+export async function createNotification(userEmail, message, link) {
+  try {
+    await fetch(`${API_URL}/notifications`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userEmail, message, link })
+    });
+    window.dispatchEvent(new Event('notificationsUpdated'));
+  } catch (err) {
+    console.error('Failed to create notification:', err);
   }
 }
