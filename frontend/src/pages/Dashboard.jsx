@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { getListings, saveListings, getProfile, saveProfile, getFavorites, toggleFavorite } from '../db';
+import { getListings, saveListings, getProfile, saveProfile, getFavorites, toggleFavorite, getTransactionHistory } from '../db';
 
 const DEFAULT_RENTALS = [];
 
@@ -28,14 +28,44 @@ export default function Dashboard() {
       setListings(l);
       setFavorites(await getFavorites());
 
-      // 1. Removed mock listings seeding as per user request to start at zero.
-      // 2. Load rentals from storage or seed
-      const savedRentals = localStorage.getItem("campus_rentals_v2");
-      if (!savedRentals) {
-        localStorage.setItem("campus_rentals_v2", JSON.stringify(DEFAULT_RENTALS));
-        setRentals(DEFAULT_RENTALS);
-      } else {
-        setRentals(JSON.parse(savedRentals));
+      if (p && p.email) {
+        const history = await getTransactionHistory(p.email);
+        
+        const activeBorrows = history.filter(item => 
+          item.status === 'rented' && 
+          item.rentedUntil && 
+          new Date(item.rentedUntil) > new Date()
+        );
+
+        const lentItems = l.filter(item => 
+          item.seller === p.name && 
+          item.status === 'rented' && 
+          item.rentedUntil && 
+          new Date(item.rentedUntil) > new Date()
+        );
+
+        const formatRental = (item, type, partnerName) => {
+          const due = new Date(item.rentedUntil);
+          const now = new Date();
+          const daysRemaining = Math.max(0, Math.ceil((due - now) / (1000 * 60 * 60 * 24)));
+          return {
+            id: type === 'lent' ? item.id + '-lent' : item.id,
+            title: item.title,
+            image: item.image,
+            type: type,
+            partner: partnerName,
+            dueDate: due.toLocaleDateString(),
+            daysRemaining: daysRemaining,
+            totalDays: Math.max(30, daysRemaining) // Approximate for progress bar
+          };
+        };
+
+        const rentalsData = [
+          ...activeBorrows.map(item => formatRental(item, 'borrowed', item.seller)),
+          ...lentItems.map(item => formatRental(item, 'lent', item.rentedByEmail || 'Renter'))
+        ];
+
+        setRentals(rentalsData);
       }
     };
     fetchData();
@@ -43,9 +73,49 @@ export default function Dashboard() {
 
   // Sync state on dynamic updates
   useEffect(() => {
-    const handleProfileChange = async () => setProfile(await getProfile());
-    const handleListingsUpdate = async () => setListings(await getListings());
+    const handleProfileChange = async () => {
+      const p = await getProfile();
+      setProfile(p);
+      refreshRentals(p, listings);
+    };
+    
+    const handleListingsUpdate = async () => {
+      const l = await getListings();
+      setListings(l);
+      refreshRentals(profile, l);
+    };
+    
     const handleFavoritesUpdate = async () => setFavorites(await getFavorites());
+
+    const refreshRentals = async (p, l) => {
+      if (p && p.email) {
+        const history = await getTransactionHistory(p.email);
+        const activeBorrows = history.filter(item => item.status === 'rented' && item.rentedUntil && new Date(item.rentedUntil) > new Date());
+        const lentItems = l.filter(item => item.seller === p.name && item.status === 'rented' && item.rentedUntil && new Date(item.rentedUntil) > new Date());
+
+        const formatRental = (item, type, partnerName) => {
+          const due = new Date(item.rentedUntil);
+          const now = new Date();
+          const daysRemaining = Math.max(0, Math.ceil((due - now) / (1000 * 60 * 60 * 24)));
+          return {
+            id: type === 'lent' ? item.id + '-lent' : item.id,
+            title: item.title,
+            image: item.image,
+            type: type,
+            partner: partnerName,
+            dueDate: due.toLocaleDateString(),
+            daysRemaining: daysRemaining,
+            totalDays: Math.max(30, daysRemaining)
+          };
+        };
+
+        const rentalsData = [
+          ...activeBorrows.map(item => formatRental(item, 'borrowed', item.seller)),
+          ...lentItems.map(item => formatRental(item, 'lent', item.rentedByEmail || 'Renter'))
+        ];
+        setRentals(rentalsData);
+      }
+    };
 
     window.addEventListener('profileChanged', handleProfileChange);
     window.addEventListener('listingsUpdated', handleListingsUpdate);
@@ -56,7 +126,7 @@ export default function Dashboard() {
       window.removeEventListener('listingsUpdated', handleListingsUpdate);
       window.removeEventListener('favoritesUpdated', handleFavoritesUpdate);
     };
-  }, []);
+  }, [profile, listings]);
 
   // Filter listings owned by user
   const userListings = listings.filter(item => item.seller === profile.name);

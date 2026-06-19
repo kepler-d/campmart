@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { getListings, getFavorites, toggleFavorite, getProfile, createMessageThread, createNotification } from '../db';
+import { getListings, getFavorites, toggleFavorite, getProfile, createMessageThread, createNotification, buyItem, rentItem } from '../db';
 
 export default function ProductDetails() {
   const { id } = useParams();
@@ -10,9 +10,11 @@ export default function ProductDetails() {
   const [listings, setListings] = useState([]);
   const [favorites, setFavorites] = useState([]);
   const [showTransactionModal, setShowTransactionModal] = useState(false);
+  const [showRentalModal, setShowRentalModal] = useState(false);
   const [mainImageIndex, setMainImageIndex] = useState(0);
   const [pickupLocation, setPickupLocation] = useState('Student Union Building');
   const [customPickupLocation, setCustomPickupLocation] = useState('');
+  const [rentalDuration, setRentalDuration] = useState('1 week');
 
   useEffect(() => {
     const fetchInitialData = async () => {
@@ -64,6 +66,14 @@ export default function ProductDetails() {
 
   const isFav = favorites.includes(product.id);
 
+  let isRentedOut = false;
+  let isSold = product.status === 'sold';
+  if (product.status === 'rented' && product.rentedUntil) {
+    if (new Date(product.rentedUntil) > new Date()) {
+      isRentedOut = true;
+    }
+  }
+
   const handleFavoriteClick = async () => {
     await toggleFavorite(product.id);
   };
@@ -83,15 +93,65 @@ export default function ProductDetails() {
     const sellerEmail = product.sellerEmail || product.seller.toLowerCase().replace(' ', '.') + '@indoreinstitute.com';
     const finalLocation = pickupLocation === 'Other' ? customPickupLocation : pickupLocation;
     const message = `${profile.name} has purchased your item: "${product.title}". Requested pickup: ${finalLocation}`;
-    const link = `/messages`; // Simplified, could point to order details
+
+    // Create or get the message thread so the seller can jump straight into the chat with the buyer
+    const thread = await createMessageThread(
+      profile.email,
+      sellerEmail,
+      {
+        title: product.title,
+        price: product.isRentOnly 
+          ? `₹${(product.rentPrice || 0).toFixed(2)}/mo`
+          : `₹${product.price.toFixed(2)}`,
+        image: product.image
+      },
+      product.seller,
+      product.sellerAvatar
+    );
+
+    const link = thread ? `/messages?threadId=${thread.threadId}` : `/messages`;
     await createNotification(sellerEmail, message, link);
+    await buyItem(product.id, profile.email);
     
     setShowTransactionModal(false);
     alert(`Thank you for purchasing "${product.title}"! The seller has been notified.`);
   };
 
   const handleRentClick = () => {
-    alert(`Starting rental process for "${product.title}".`);
+    setShowRentalModal(true);
+  };
+
+  const handleConfirmRental = async () => {
+    const profile = await getProfile();
+    if (!profile || !profile.email) {
+      navigate('/login');
+      return;
+    }
+    
+    // Notify seller
+    const sellerEmail = product.sellerEmail || product.seller.toLowerCase().replace(' ', '.') + '@indoreinstitute.com';
+    const finalLocation = pickupLocation === 'Other' ? customPickupLocation : pickupLocation;
+    const message = `${profile.name} wants to rent your item: "${product.title}" for ${rentalDuration}. Requested pickup: ${finalLocation}`;
+
+    // Create or get the message thread so the seller can jump straight into the chat with the buyer
+    const thread = await createMessageThread(
+      profile.email,
+      sellerEmail,
+      {
+        title: product.title,
+        price: `₹${(product.rentPrice || 0).toFixed(2)}/mo`,
+        image: product.image
+      },
+      product.seller,
+      product.sellerAvatar
+    );
+
+    const link = thread ? `/messages?threadId=${thread.threadId}` : `/messages`;
+    await createNotification(sellerEmail, message, link);
+    await rentItem(product.id, profile.email, rentalDuration);
+    
+    setShowRentalModal(false);
+    alert(`Thank you! Request to rent "${product.title}" for ${rentalDuration} has been sent to the seller.`);
   };
 
   const handleMessageClick = async () => {
@@ -154,14 +214,28 @@ export default function ProductDetails() {
             <img alt={product.title} className="w-full h-full object-cover" src={productImages[mainImageIndex]} />
             
             {/* Badges */}
-            <div className="absolute top-4 left-4 flex gap-2">
-              <span className="bg-surface/90 backdrop-blur-md text-on-surface font-label-sm text-label-sm px-3 py-1 rounded-full border border-outline-variant/20 shadow-sm">
-                {product.condition}
-              </span>
+            <div className="absolute top-4 left-4 flex flex-col gap-2">
+              {isSold && (
+                <span className="w-fit bg-error text-white font-label-sm text-label-sm px-3 py-1 rounded-full shadow-sm font-bold flex items-center gap-1">
+                  <span className="material-symbols-outlined text-[14px]">block</span>
+                  Sold Out
+                </span>
+              )}
+              {isRentedOut && (
+                <span className="w-fit bg-orange-500 text-white font-label-sm text-label-sm px-3 py-1 rounded-full shadow-sm font-bold flex items-center gap-1">
+                  <span className="material-symbols-outlined text-[14px]">schedule</span>
+                  Rented until {new Date(product.rentedUntil).toLocaleDateString()}
+                </span>
+              )}
+              <div className="flex gap-2">
+                <span className="bg-surface/90 backdrop-blur-md text-on-surface font-label-sm text-label-sm px-3 py-1 rounded-full border border-outline-variant/20 shadow-sm">
+                  {product.condition}
+                </span>
               <span className="bg-secondary-container text-on-secondary-container font-label-sm text-label-sm px-3 py-1 rounded-full border border-secondary/20 shadow-sm flex items-center gap-0.5">
                 <span className="material-symbols-outlined text-[12px] icon-fill">verified</span>
                 Verified Seller
               </span>
+              </div>
             </div>
           </div>
 
@@ -241,10 +315,18 @@ export default function ProductDetails() {
 
             {/* Action Buttons */}
             <div className="flex flex-col gap-3 mt-2">
-              {product.isRentOnly ? (
+              {isSold || isRentedOut ? (
                 <button 
                   disabled
-                  className="w-full bg-outline-variant text-on-surface-variant font-label-md text-label-md py-3 rounded-lg cursor-not-allowed flex justify-center items-center gap-2"
+                  className="w-full bg-surface-variant text-on-surface-variant font-label-md text-label-md py-3 rounded-lg cursor-not-allowed flex justify-center items-center gap-2"
+                >
+                  <span className="material-symbols-outlined">lock</span>
+                  Currently Unavailable
+                </button>
+              ) : product.isRentOnly ? (
+                <button 
+                  disabled
+                  className="w-full bg-surface-variant text-on-surface-variant font-label-md text-label-md py-3 rounded-lg cursor-not-allowed flex justify-center items-center gap-2"
                 >
                   <span className="material-symbols-outlined">block</span>
                   Rent Only
@@ -260,7 +342,7 @@ export default function ProductDetails() {
               )}
 
               <div className="flex gap-3">
-                {(product.rentPrice || product.isRentOnly) && (
+                {!isSold && !isRentedOut && (product.rentPrice || product.isRentOnly) && (
                   <button 
                     onClick={handleRentClick}
                     className="flex-1 bg-surface border border-outline hover:bg-surface-container-low text-primary font-label-md text-label-md py-3 rounded-lg transition-colors font-semibold flex justify-center items-center gap-2 active:scale-95 duration-100"
@@ -319,6 +401,94 @@ export default function ProductDetails() {
             ))}
           </div>
         </section>
+      )}
+
+      {/* Rental Modal */}
+      {showRentalModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-inverse-surface/60 backdrop-blur-sm p-4">
+          <div className="bg-surface rounded-2xl shadow-xl w-full max-w-md overflow-hidden">
+            <div className="p-6">
+              <div className="flex justify-between items-start mb-4">
+                <h3 className="font-headline-md text-xl font-bold text-on-surface">Confirm Rental</h3>
+                <button 
+                  onClick={() => setShowRentalModal(false)}
+                  className="text-outline hover:text-on-surface transition-colors"
+                >
+                  <span className="material-symbols-outlined">close</span>
+                </button>
+              </div>
+              <div className="bg-surface-container-low rounded-xl p-4 flex gap-4 mb-6">
+                <img src={productImages[0]} alt="Thumbnail" className="w-16 h-16 object-cover rounded-lg" />
+                <div>
+                  <p className="font-label-md font-bold text-on-surface line-clamp-2">{product.title}</p>
+                  <p className="font-headline-sm text-primary font-bold mt-1">₹{(product.rentPrice || 0).toFixed(2)}/mo</p>
+                </div>
+              </div>
+              <div className="space-y-4 mb-6">
+                <div>
+                  <label className="block text-sm font-bold text-on-surface-variant mb-1">Rental Duration</label>
+                  <select 
+                    value={rentalDuration}
+                    onChange={(e) => setRentalDuration(e.target.value)}
+                    className="w-full bg-surface-container border border-outline-variant/50 rounded-lg p-2.5 text-on-surface focus:ring-2 focus:ring-primary focus:outline-none mb-2"
+                  >
+                    <option value="1 week">1 Week</option>
+                    <option value="1 month">1 Month</option>
+                    <option value="3 months">3 Months (Semester)</option>
+                    <option value="6 months">6 Months</option>
+                    <option value="1 year">1 Year</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-bold text-on-surface-variant mb-1">Pickup Location</label>
+                  <select 
+                    value={pickupLocation}
+                    onChange={(e) => setPickupLocation(e.target.value)}
+                    className="w-full bg-surface-container border border-outline-variant/50 rounded-lg p-2.5 text-on-surface focus:ring-2 focus:ring-primary focus:outline-none mb-2"
+                  >
+                    <option value="Student Union Building">Student Union Building</option>
+                    <option value="Main Library">Main Library</option>
+                    <option value="Computer Science Dept.">Computer Science Dept.</option>
+                    <option value="Other">Other (Specify meeting point)</option>
+                  </select>
+                  {pickupLocation === 'Other' && (
+                    <input 
+                      type="text"
+                      value={customPickupLocation}
+                      onChange={(e) => setCustomPickupLocation(e.target.value)}
+                      placeholder="Enter custom meeting point..."
+                      className="w-full bg-surface-container-lowest border border-outline-variant/50 rounded-lg p-2.5 text-on-surface focus:ring-2 focus:ring-primary focus:outline-none"
+                    />
+                  )}
+                </div>
+                <div>
+                  <label className="block text-sm font-bold text-on-surface-variant mb-1">Payment Method</label>
+                  <select className="w-full bg-surface-container border border-outline-variant/50 rounded-lg p-2.5 text-on-surface focus:ring-2 focus:ring-primary focus:outline-none">
+                    <option>UPI / Campus Pay</option>
+                    <option>Cash at Handover</option>
+                  </select>
+                </div>
+              </div>
+              <p className="text-xs text-on-surface-variant mb-6 text-center">
+                Clicking confirm will notify the seller to arrange the handover for your rental.
+              </p>
+              <div className="flex gap-3">
+                <button 
+                  onClick={() => setShowRentalModal(false)}
+                  className="flex-1 py-3 rounded-xl border border-outline-variant/50 text-on-surface font-label-md hover:bg-surface-container-low transition-colors"
+                >
+                  Cancel
+                </button>
+                <button 
+                  onClick={handleConfirmRental}
+                  className="flex-1 py-3 rounded-xl bg-primary text-on-primary font-label-md font-bold hover:bg-primary/95 transition-colors shadow-sm"
+                >
+                  Confirm Rental
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Transaction Modal */}

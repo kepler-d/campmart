@@ -263,3 +263,41 @@ export async function createNotification(userEmail, message, link) {
     console.error('Failed to create notification:', err);
   }
 }
+
+export async function buyItem(listingId, buyerEmail) {
+  try {
+    const res = await fetch(`${API_URL}/listings/${listingId}/transaction`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'buy', buyerEmail })
+    });
+    window.dispatchEvent(new Event('listingsUpdated'));
+    return await res.json();
+  } catch (err) {
+    console.error('Failed to buy item:', err);
+  }
+}
+
+export async function rentItem(listingId, buyerEmail, duration) {
+  try {
+    const res = await fetch(`${API_URL}/listings/${listingId}/transaction`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'rent', buyerEmail, duration })
+    });
+    window.dispatchEvent(new Event('listingsUpdated'));
+    return await res.json();
+  } catch (err) {
+    console.error('Failed to rent item:', err);
+  }
+}
+
+export async function getTransactionHistory(email) {
+  try {
+    const res = await fetch(`${API_URL}/listings/history?email=${encodeURIComponent(email)}`);
+    return await res.json();
+  } catch (err) {
+    console.error('Failed to fetch transaction history:', err);
+    return [];
+  }
+}

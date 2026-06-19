@@ -80,6 +80,9 @@ export default function Marketplace() {
 
   // Perform filtration
   const filteredListings = listings.filter(item => {
+    // 0. Filter out sold items
+    if (item.status === 'sold') return false;
+
     // 1. Search Query filter
     if (searchQuery) {
       const matchTitle = item.title.toLowerCase().includes(searchQuery.toLowerCase());
@@ -285,6 +288,12 @@ export default function Marketplace() {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-gutter">
             {sortedListings.map(item => {
+              let isRentedOut = false;
+              if (item.status === 'rented' && item.rentedUntil) {
+                if (new Date(item.rentedUntil) > new Date()) {
+                  isRentedOut = true;
+                }
+              }
               const isFav = favorites.includes(item.id);
               
               const priceDisplay = mode === 'rent'
@@ -303,6 +312,14 @@ export default function Marketplace() {
                   >
                     <span className={`material-symbols-outlined text-[20px] ${isFav ? 'icon-fill' : ''}`}>favorite</span>
                   </button>
+
+                  {/* Rented Badge */}
+                  {isRentedOut && (
+                    <div className="absolute top-3 left-3 z-20 bg-orange-500 text-white font-label-sm text-[11px] px-2 py-1 rounded-md shadow-sm font-bold flex items-center gap-1">
+                      <span className="material-symbols-outlined text-[12px]">schedule</span>
+                      Rented
+                    </div>
+                  )}
                   
                   {/* Image Frame */}
                   <Link 

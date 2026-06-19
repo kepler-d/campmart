@@ -15,7 +15,11 @@ const listingSchema = new mongoose.Schema({
   image: String,
   seller: String,
   sellerAvatar: String,
-  description: String
+  description: String,
+  status: { type: String, default: 'available' }, // 'available', 'rented', 'sold'
+  buyerEmail: String,
+  rentedByEmail: String,
+  rentedUntil: Date
 }, { strict: false }); // Allow dynamic fields if needed
 
 const profileSchema = new mongoose.Schema({

@@ -226,6 +226,69 @@ router.post('/listings', async (req, res) => {
   }
 });
 
+router.get('/listings/history', async (req, res) => {
+  await getDb();
+  try {
+    const { email } = req.query;
+    if (!email) return res.status(400).json({ error: 'Email required' });
+    
+    const historyListings = await Listing.find({
+      $or: [
+        { buyerEmail: email },
+        { rentedByEmail: email }
+      ]
+    }).lean();
+    
+    res.json(historyListings);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.post('/listings/:id/transaction', async (req, res) => {
+  await getDb();
+  try {
+    const { id } = req.params;
+    const { action, buyerEmail, duration } = req.body;
+    
+    if (!action || !buyerEmail) return res.status(400).json({ error: 'Missing required fields' });
+    
+    const listing = await Listing.findOne({ id });
+    if (!listing) return res.status(404).json({ error: 'Listing not found' });
+    
+    if (action === 'buy') {
+      listing.status = 'sold';
+      listing.buyerEmail = buyerEmail;
+    } else if (action === 'rent') {
+      listing.status = 'rented';
+      listing.rentedByEmail = buyerEmail;
+      
+      const until = new Date();
+      if (duration === '1 week') {
+        until.setDate(until.getDate() + 7);
+      } else if (duration === '1 month') {
+        until.setMonth(until.getMonth() + 1);
+      } else if (duration === '3 months') {
+        until.setMonth(until.getMonth() + 3);
+      } else if (duration === '6 months') {
+        until.setMonth(until.getMonth() + 6);
+      } else if (duration === '1 year') {
+        until.setFullYear(until.getFullYear() + 1);
+      }
+      listing.rentedUntil = until;
+    }
+    
+    await listing.save();
+    
+    // Invalidate caches
+    cache.listings = {};
+    
+    res.json({ success: true, listing });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // --- PROFILE ---
 router.get('/profile', async (req, res) => {
   await getDb();
