@@ -400,8 +400,9 @@ export default function Messages() {
                 
                 {/* Text area */}
                 <textarea 
-                  className="flex-grow bg-transparent border-none focus:ring-0 resize-none font-body-md text-body-md text-on-surface py-3 px-2 max-h-[120px] outline-none placeholder:text-outline-variant border-0" 
-                  placeholder="Type a message..." 
+                  disabled={activeThread.messages.length >= 20}
+                  className={`flex-grow bg-transparent border-none focus:ring-0 resize-none font-body-md text-body-md text-on-surface py-3 px-2 max-h-[120px] outline-none border-0 ${activeThread.messages.length >= 20 ? 'placeholder:text-error cursor-not-allowed' : 'placeholder:text-outline-variant'}`} 
+                  placeholder={activeThread.messages.length >= 20 ? "Message limit reached. Please complete handover." : "Type a message..."}
                   rows="1" 
                   style={{ minHeight: "44px" }}
                   value={inputMessage}
@@ -411,8 +412,9 @@ export default function Messages() {
                 
                 {/* Send button */}
                 <button 
+                  disabled={activeThread.messages.length >= 20}
                   onClick={() => handleSendMessage()}
-                  className="w-10 h-10 flex-shrink-0 rounded-xl bg-primary hover:bg-primary/90 flex items-center justify-center text-on-primary transition-colors shadow-sm mb-1 ml-1 border-0 cursor-pointer active:scale-95 duration-100"
+                  className={`w-10 h-10 flex-shrink-0 rounded-xl flex items-center justify-center transition-colors shadow-sm mb-1 ml-1 border-0 ${activeThread.messages.length >= 20 ? 'bg-surface-variant text-outline cursor-not-allowed' : 'bg-primary hover:bg-primary/90 text-on-primary cursor-pointer active:scale-95 duration-100'}`}
                 >
                   <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1", fontSize: "20px" }}>
                     send

@@ -337,6 +337,9 @@ router.post('/listings/:id/handover', async (req, res) => {
     listing.reservedUntil = undefined;
     await listing.save();
     
+    // Delete associated chat thread
+    await MessageThread.deleteMany({ 'productContext.title': listing.title });
+    
     cache.listings = {};
     res.json({ success: true, listing });
   } catch (err) {
@@ -358,6 +361,9 @@ router.post('/listings/:id/cancel-reservation', async (req, res) => {
     listing.reservedUntil = undefined;
     
     await listing.save();
+    
+    // Delete associated chat thread
+    await MessageThread.deleteMany({ 'productContext.title': listing.title });
     
     cache.listings = {};
     res.json({ success: true, listing });

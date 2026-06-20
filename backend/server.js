@@ -37,6 +37,10 @@ io.on('connection', (socket) => {
       const { threadId, sender, text, time } = data;
       const thread = await MessageThread.findOne({ threadId });
       if (thread) {
+        if (thread.messages.length >= 20) {
+          socket.emit('error', { message: 'Message limit reached for this thread.' });
+          return;
+        }
         thread.messages.push({ sender, text, time });
         const otherParticipant = thread.participants?.find(p => p !== sender);
         if (otherParticipant) {
