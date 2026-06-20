@@ -187,6 +187,26 @@ router.get('/listings', async (req, res) => {
     const query = domain ? { domain } : {};
     const listings = await Listing.find(query, { _id: 0, __v: 0 }).lean();
     
+    // Auto-expire reservations
+    const now = new Date();
+    let cacheNeedsUpdate = false;
+    for (let listing of listings) {
+      if (listing.status === 'reserved' && listing.reservedUntil && new Date(listing.reservedUntil) < now) {
+        await Listing.updateOne({ id: listing.id }, {
+          $set: { status: 'available' },
+          $unset: { buyerEmail: "", rentedByEmail: "", rentedUntil: "", reservedUntil: "" }
+        });
+        listing.status = 'available';
+        listing.buyerEmail = undefined;
+        listing.rentedByEmail = undefined;
+        listing.rentedUntil = undefined;
+        listing.reservedUntil = undefined;
+        cacheNeedsUpdate = true;
+      }
+    }
+    
+    if (cacheNeedsUpdate) cache.listings = {};
+    
     if (domain) {
       if (!cache.listings) cache.listings = {};
       cache.listings[domain] = listings;
@@ -256,26 +276,33 @@ router.post('/listings/:id/transaction', async (req, res) => {
     const listing = await Listing.findOne({ id });
     if (!listing) return res.status(404).json({ error: 'Listing not found' });
     
-    if (action === 'buy') {
-      listing.status = 'sold';
+    if (action === 'reserve') {
+      listing.status = 'reserved';
       listing.buyerEmail = buyerEmail;
-    } else if (action === 'rent') {
-      listing.status = 'rented';
+      const until = new Date();
+      until.setHours(until.getHours() + 48); // 48 hours time limit
+      listing.reservedUntil = until;
+    } else if (action === 'reserve_rent') {
+      listing.status = 'reserved';
       listing.rentedByEmail = buyerEmail;
       
-      const until = new Date();
+      const rentEnd = new Date();
       if (duration === '1 week') {
-        until.setDate(until.getDate() + 7);
+        rentEnd.setDate(rentEnd.getDate() + 7);
       } else if (duration === '1 month') {
-        until.setMonth(until.getMonth() + 1);
+        rentEnd.setMonth(rentEnd.getMonth() + 1);
       } else if (duration === '3 months') {
-        until.setMonth(until.getMonth() + 3);
+        rentEnd.setMonth(rentEnd.getMonth() + 3);
       } else if (duration === '6 months') {
-        until.setMonth(until.getMonth() + 6);
+        rentEnd.setMonth(rentEnd.getMonth() + 6);
       } else if (duration === '1 year') {
-        until.setFullYear(until.getFullYear() + 1);
+        rentEnd.setFullYear(rentEnd.getFullYear() + 1);
       }
-      listing.rentedUntil = until;
+      listing.rentedUntil = rentEnd;
+      
+      const reserveEnd = new Date();
+      reserveEnd.setHours(reserveEnd.getHours() + 48);
+      listing.reservedUntil = reserveEnd;
     }
     
     await listing.save();
@@ -283,6 +310,56 @@ router.post('/listings/:id/transaction', async (req, res) => {
     // Invalidate caches
     cache.listings = {};
     
+    res.json({ success: true, listing });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// --- HANDOVER & CANCELLATION ---
+router.post('/listings/:id/handover', async (req, res) => {
+  await getDb();
+  try {
+    const { id } = req.params;
+    const listing = await Listing.findOne({ id });
+    if (!listing) return res.status(404).json({ error: 'Listing not found' });
+    
+    if (listing.status !== 'reserved') {
+      return res.status(400).json({ error: 'Listing is not reserved' });
+    }
+    
+    if (listing.rentedUntil && listing.rentedByEmail) {
+       listing.status = 'rented';
+    } else {
+       listing.status = 'sold';
+    }
+    
+    listing.reservedUntil = undefined;
+    await listing.save();
+    
+    cache.listings = {};
+    res.json({ success: true, listing });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.post('/listings/:id/cancel-reservation', async (req, res) => {
+  await getDb();
+  try {
+    const { id } = req.params;
+    const listing = await Listing.findOne({ id });
+    if (!listing) return res.status(404).json({ error: 'Listing not found' });
+    
+    listing.status = 'available';
+    listing.buyerEmail = undefined;
+    listing.rentedByEmail = undefined;
+    listing.rentedUntil = undefined;
+    listing.reservedUntil = undefined;
+    
+    await listing.save();
+    
+    cache.listings = {};
     res.json({ success: true, listing });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -349,7 +426,8 @@ router.post('/messages/thread', async (req, res) => {
 
   try {
     let thread = await MessageThread.findOne({
-      participants: { $all: [buyerEmail, sellerEmail] }
+      participants: { $all: [buyerEmail, sellerEmail] },
+      'productContext.title': productContext.title
     }, { _id: 0, __v: 0 }).lean();
 
     if (!thread) {
@@ -363,9 +441,9 @@ router.post('/messages/thread', async (req, res) => {
         online: true,
         lastActive: "Now",
         messages: [
-           { sender: sellerEmail, text: `Hi! I saw you are interested in "${productContext?.title || 'this item'}". How can I help?`, time: "Now" }
+           { sender: buyerEmail, text: `Hi! I have reserved "${productContext?.title || 'this item'}". Let's arrange a time and place to meet for the handover!`, time: "Now" }
         ],
-        unreadCount: { [buyerEmail]: 1 }
+        unreadCount: { [sellerEmail]: 1 }
       });
       await newThread.save();
       thread = newThread.toObject();

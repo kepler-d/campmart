@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { getListings, saveListings, getProfile, saveProfile, getFavorites, toggleFavorite, getTransactionHistory } from '../db';
+import { getListings, saveListings, getProfile, saveProfile, getFavorites, toggleFavorite, getTransactionHistory, confirmHandover, cancelReservation } from '../db';
 
 const DEFAULT_RENTALS = [];
 
@@ -12,6 +12,7 @@ export default function Dashboard() {
   const [listings, setListings] = useState([]);
   const [favorites, setFavorites] = useState([]);
   const [rentals, setRentals] = useState([]);
+  const [pendingHandovers, setPendingHandovers] = useState([]);
 
   // Modal State
   const [showEditModal, setShowEditModal] = useState(false);
@@ -82,6 +83,16 @@ export default function Dashboard() {
         ];
 
         setRentals(rentalsData);
+
+        const pending = history.filter(item => item.status === 'reserved');
+        const userReserved = l.filter(item => item.seller === p.name && item.status === 'reserved');
+        const formattedPending = [
+          ...pending.map(item => ({ ...item, role: 'buyer', partner: item.seller })),
+          ...userReserved.map(item => ({ ...item, role: 'seller', partner: item.buyerEmail || item.rentedByEmail }))
+        ];
+        // Deduplicate
+        const uniquePending = Array.from(new Map(formattedPending.map(item => [item.id, item])).values());
+        setPendingHandovers(uniquePending);
       }
     };
     fetchData();
@@ -130,6 +141,15 @@ export default function Dashboard() {
           ...lentItems.map(item => formatRental(item, 'lent', item.rentedByEmail || 'Renter'))
         ];
         setRentals(rentalsData);
+
+        const pending = history.filter(item => item.status === 'reserved');
+        const userReserved = l.filter(item => item.seller === p.name && item.status === 'reserved');
+        const formattedPending = [
+          ...pending.map(item => ({ ...item, role: 'buyer', partner: item.seller })),
+          ...userReserved.map(item => ({ ...item, role: 'seller', partner: item.buyerEmail || item.rentedByEmail }))
+        ];
+        const uniquePending = Array.from(new Map(formattedPending.map(item => [item.id, item])).values());
+        setPendingHandovers(uniquePending);
       }
     };
 
@@ -197,6 +217,28 @@ export default function Dashboard() {
       };
       setProfile(updatedProfile);
       saveProfile(updatedProfile);
+    }
+  };
+
+  const handleConfirmHandover = async (id, title) => {
+    if (window.confirm(`Are you sure you want to confirm handover for "${title}"?`)) {
+      await confirmHandover(id);
+      alert(`Handover confirmed for "${title}"!`);
+      
+      const updatedProfile = {
+        ...profile,
+        salesCount: (profile.salesCount || 0) + 1,
+        points: (profile.points || 0) + 100
+      };
+      setProfile(updatedProfile);
+      saveProfile(updatedProfile);
+    }
+  };
+
+  const handleCancelReservation = async (id, title) => {
+    if (window.confirm(`Are you sure you want to cancel the reservation for "${title}"?`)) {
+      await cancelReservation(id);
+      alert(`Reservation cancelled for "${title}".`);
     }
   };
 
@@ -401,6 +443,61 @@ export default function Dashboard() {
         
         {/* Left: My Listings Manager */}
         <div className="lg:col-span-7 flex flex-col gap-md">
+          
+          {/* Pending Handovers Section */}
+          {pendingHandovers.length > 0 && (
+            <div className="mb-6">
+              <h2 className="font-headline-md text-lg font-bold text-on-surface flex items-center gap-2 mb-4">
+                <span className="material-symbols-outlined text-orange-500">lock_clock</span>
+                Pending Handovers
+              </h2>
+              <div className="flex flex-col gap-4">
+                {pendingHandovers.map(item => (
+                  <div 
+                    key={`pending-${item.id}`}
+                    className="bg-orange-500/10 border border-orange-500/30 rounded-2xl p-md flex flex-col sm:flex-row items-start sm:items-center justify-between gap-md shadow-sm"
+                  >
+                    <div 
+                      onClick={() => navigate(`/product/${item.id}`)}
+                      className="flex items-center gap-md cursor-pointer"
+                    >
+                      <div className="w-16 h-16 rounded-xl bg-surface-container-high overflow-hidden shrink-0 border border-outline-variant/20">
+                        <img alt={item.title} className="w-full h-full object-cover" src={item.image || 'https://via.placeholder.com/80'}/>
+                      </div>
+                      <div>
+                        <h4 className="font-headline-md text-sm font-bold text-on-surface line-clamp-1">{item.title}</h4>
+                        <p className="font-body-md text-xs text-on-surface-variant mt-0.5">
+                          Reserved {item.role === 'buyer' ? 'from' : 'by'} <span className="font-bold">{item.partner}</span>
+                        </p>
+                        <div className="flex gap-2 mt-2">
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-orange-600 bg-orange-100 px-2 py-0.5 rounded">
+                            Action Required
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex flex-wrap gap-2 w-full sm:w-auto shrink-0 justify-end">
+                      {item.role === 'seller' && (
+                        <button 
+                          onClick={() => handleConfirmHandover(item.id, item.title)}
+                          className="flex-1 sm:flex-none bg-primary text-on-primary hover:bg-primary/90 font-label-md text-xs px-3 py-2 rounded-xl flex items-center justify-center gap-1 font-semibold cursor-pointer border-0 active:scale-95 duration-100 shadow-sm"
+                        >
+                          <span className="material-symbols-outlined text-[16px]">verified</span> Confirm Handover
+                        </button>
+                      )}
+                      <button 
+                        onClick={() => handleCancelReservation(item.id, item.title)}
+                        className="flex-1 sm:flex-none border border-error text-error hover:bg-error/10 font-label-md text-xs px-3 py-2 rounded-xl flex items-center justify-center gap-1 cursor-pointer active:scale-95 duration-100"
+                      >
+                        <span className="material-symbols-outlined text-[16px]">cancel</span> Cancel
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           <div className="flex justify-between items-center">
             <h2 className="font-headline-md text-lg font-bold text-on-surface flex items-center gap-2">
               <span className="material-symbols-outlined">edit_note</span>

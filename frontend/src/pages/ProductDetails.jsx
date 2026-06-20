@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { getListings, getFavorites, toggleFavorite, getProfile, createMessageThread, createNotification, buyItem, rentItem } from '../db';
+import { getListings, getFavorites, toggleFavorite, getProfile, createMessageThread, createNotification, reserveItem, reserveRentItem } from '../db';
 
 export default function ProductDetails() {
   const { id } = useParams();
@@ -68,6 +68,7 @@ export default function ProductDetails() {
 
   let isRentedOut = false;
   let isSold = product.status === 'sold';
+  let isReserved = product.status === 'reserved';
   if (product.status === 'rented' && product.rentedUntil) {
     if (new Date(product.rentedUntil) > new Date()) {
       isRentedOut = true;
@@ -92,7 +93,7 @@ export default function ProductDetails() {
     // Notify seller
     const sellerEmail = product.sellerEmail || product.seller.toLowerCase().replace(' ', '.') + '@indoreinstitute.com';
     const finalLocation = pickupLocation === 'Other' ? customPickupLocation : pickupLocation;
-    const message = `${profile.name} has purchased your item: "${product.title}". Requested pickup: ${finalLocation}`;
+    const message = `${profile.name} has reserved your item: "${product.title}". Requested pickup: ${finalLocation}. Please arrange the handover in messages.`;
 
     // Create or get the message thread so the seller can jump straight into the chat with the buyer
     const thread = await createMessageThread(
@@ -111,10 +112,11 @@ export default function ProductDetails() {
 
     const link = thread ? `/messages?threadId=${thread.threadId}` : `/messages`;
     await createNotification(sellerEmail, message, link);
-    await buyItem(product.id, profile.email);
+    await reserveItem(product.id, profile.email);
     
     setShowTransactionModal(false);
-    alert(`Thank you for purchasing "${product.title}"! The seller has been notified.`);
+    alert(`You have reserved "${product.title}" for 48 hours! A chat has been started with the seller to coordinate the handover.`);
+    navigate(link);
   };
 
   const handleRentClick = () => {
@@ -131,7 +133,7 @@ export default function ProductDetails() {
     // Notify seller
     const sellerEmail = product.sellerEmail || product.seller.toLowerCase().replace(' ', '.') + '@indoreinstitute.com';
     const finalLocation = pickupLocation === 'Other' ? customPickupLocation : pickupLocation;
-    const message = `${profile.name} wants to rent your item: "${product.title}" for ${rentalDuration}. Requested pickup: ${finalLocation}`;
+    const message = `${profile.name} wants to rent your item: "${product.title}" for ${rentalDuration}. Requested pickup: ${finalLocation}. Please arrange the handover in messages.`;
 
     // Create or get the message thread so the seller can jump straight into the chat with the buyer
     const thread = await createMessageThread(
@@ -148,10 +150,11 @@ export default function ProductDetails() {
 
     const link = thread ? `/messages?threadId=${thread.threadId}` : `/messages`;
     await createNotification(sellerEmail, message, link);
-    await rentItem(product.id, profile.email, rentalDuration);
+    await reserveRentItem(product.id, profile.email, rentalDuration);
     
     setShowRentalModal(false);
-    alert(`Thank you! Request to rent "${product.title}" for ${rentalDuration} has been sent to the seller.`);
+    alert(`You have reserved "${product.title}" for rental for 48 hours! A chat has been started with the seller to coordinate the handover.`);
+    navigate(link);
   };
 
   const handleMessageClick = async () => {
@@ -219,6 +222,12 @@ export default function ProductDetails() {
                 <span className="w-fit bg-error text-white font-label-sm text-label-sm px-3 py-1 rounded-full shadow-sm font-bold flex items-center gap-1">
                   <span className="material-symbols-outlined text-[14px]">block</span>
                   Sold Out
+                </span>
+              )}
+              {isReserved && !isSold && !isRentedOut && (
+                <span className="w-fit bg-orange-500 text-white font-label-sm text-label-sm px-3 py-1 rounded-full shadow-sm font-bold flex items-center gap-1">
+                  <span className="material-symbols-outlined text-[14px]">lock_clock</span>
+                  Reserved (Pending Handover)
                 </span>
               )}
               {isRentedOut && (
@@ -323,6 +332,14 @@ export default function ProductDetails() {
                   <span className="material-symbols-outlined">lock</span>
                   Currently Unavailable
                 </button>
+              ) : isReserved ? (
+                <button 
+                  disabled
+                  className="w-full bg-surface-variant text-on-surface-variant font-label-md text-label-md py-3 rounded-lg cursor-not-allowed flex justify-center items-center gap-2"
+                >
+                  <span className="material-symbols-outlined">lock_clock</span>
+                  Currently Reserved
+                </button>
               ) : product.isRentOnly ? (
                 <button 
                   disabled
@@ -334,15 +351,15 @@ export default function ProductDetails() {
               ) : (
                 <button 
                   onClick={handleBuyClick}
-                  className="w-full bg-primary text-on-primary hover:bg-primary/95 font-label-md text-label-md py-3 rounded-lg transition-colors font-semibold flex justify-center items-center gap-2 active:scale-95 duration-100 shadow-sm"
+                  className="w-full bg-primary text-on-primary hover:bg-primary/95 font-label-md text-label-md py-3 rounded-lg transition-colors font-semibold flex justify-center items-center gap-2 active:scale-95 duration-100 shadow-sm cursor-pointer border-0"
                 >
-                  <span className="material-symbols-outlined">shopping_cart</span>
-                  Buy Now
+                  <span className="material-symbols-outlined">bookmark_add</span>
+                  Reserve Item
                 </button>
               )}
 
               <div className="flex gap-3">
-                {!isSold && !isRentedOut && (product.rentPrice || product.isRentOnly) && (
+                {!isSold && !isRentedOut && !isReserved && (product.rentPrice || product.isRentOnly) && (
                   <button 
                     onClick={handleRentClick}
                     className="flex-1 bg-surface border border-outline hover:bg-surface-container-low text-primary font-label-md text-label-md py-3 rounded-lg transition-colors font-semibold flex justify-center items-center gap-2 active:scale-95 duration-100"
@@ -409,7 +426,7 @@ export default function ProductDetails() {
           <div className="bg-surface rounded-2xl shadow-xl w-full max-w-md overflow-hidden">
             <div className="p-6">
               <div className="flex justify-between items-start mb-4">
-                <h3 className="font-headline-md text-xl font-bold text-on-surface">Confirm Rental</h3>
+                <h3 className="font-headline-md text-xl font-bold text-on-surface">Reserve Rental</h3>
                 <button 
                   onClick={() => setShowRentalModal(false)}
                   className="text-outline hover:text-on-surface transition-colors"
@@ -470,7 +487,7 @@ export default function ProductDetails() {
                 </div>
               </div>
               <p className="text-xs text-on-surface-variant mb-6 text-center">
-                Clicking confirm will notify the seller to arrange the handover for your rental.
+                Clicking reserve will lock this item for 48 hours and notify the seller to arrange the handover via messages. Payment happens in person.
               </p>
               <div className="flex gap-3">
                 <button 
@@ -481,9 +498,9 @@ export default function ProductDetails() {
                 </button>
                 <button 
                   onClick={handleConfirmRental}
-                  className="flex-1 py-3 rounded-xl bg-primary text-on-primary font-label-md font-bold hover:bg-primary/95 transition-colors shadow-sm"
+                  className="flex-1 py-3 rounded-xl bg-primary text-on-primary font-label-md font-bold hover:bg-primary/95 transition-colors shadow-sm cursor-pointer border-0"
                 >
-                  Confirm Rental
+                  Reserve Rental
                 </button>
               </div>
             </div>
@@ -497,7 +514,7 @@ export default function ProductDetails() {
           <div className="bg-surface rounded-2xl shadow-xl w-full max-w-md overflow-hidden">
             <div className="p-6">
               <div className="flex justify-between items-start mb-4">
-                <h3 className="font-headline-md text-xl font-bold text-on-surface">Confirm Purchase</h3>
+                <h3 className="font-headline-md text-xl font-bold text-on-surface">Reserve Item</h3>
                 <button 
                   onClick={() => setShowTransactionModal(false)}
                   className="text-outline hover:text-on-surface transition-colors"
@@ -544,7 +561,7 @@ export default function ProductDetails() {
                 </div>
               </div>
               <p className="text-xs text-on-surface-variant mb-6 text-center">
-                Clicking confirm will notify the seller to arrange the handover.
+                Clicking reserve will lock this item for 48 hours and start a chat with the seller to arrange handover. You pay directly when you meet.
               </p>
               <div className="flex gap-3">
                 <button 
@@ -555,9 +572,9 @@ export default function ProductDetails() {
                 </button>
                 <button 
                   onClick={handleConfirmPurchase}
-                  className="flex-1 py-3 rounded-xl bg-primary text-on-primary font-label-md font-bold hover:bg-primary/95 transition-colors shadow-sm"
+                  className="flex-1 py-3 rounded-xl bg-primary text-on-primary font-label-md font-bold hover:bg-primary/95 transition-colors shadow-sm cursor-pointer border-0"
                 >
-                  Confirm
+                  Reserve Item
                 </button>
               </div>
             </div>

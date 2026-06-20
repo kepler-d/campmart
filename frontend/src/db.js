@@ -264,31 +264,57 @@ export async function createNotification(userEmail, message, link) {
   }
 }
 
-export async function buyItem(listingId, buyerEmail) {
+export async function reserveItem(listingId, buyerEmail) {
   try {
     const res = await fetch(`${API_URL}/listings/${listingId}/transaction`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'buy', buyerEmail })
+      body: JSON.stringify({ action: 'reserve', buyerEmail })
     });
     window.dispatchEvent(new Event('listingsUpdated'));
     return await res.json();
   } catch (err) {
-    console.error('Failed to buy item:', err);
+    console.error('Failed to reserve item:', err);
   }
 }
 
-export async function rentItem(listingId, buyerEmail, duration) {
+export async function reserveRentItem(listingId, buyerEmail, duration) {
   try {
     const res = await fetch(`${API_URL}/listings/${listingId}/transaction`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'rent', buyerEmail, duration })
+      body: JSON.stringify({ action: 'reserve_rent', buyerEmail, duration })
     });
     window.dispatchEvent(new Event('listingsUpdated'));
     return await res.json();
   } catch (err) {
-    console.error('Failed to rent item:', err);
+    console.error('Failed to reserve rental item:', err);
+  }
+}
+
+export async function confirmHandover(listingId) {
+  try {
+    const res = await fetch(`${API_URL}/listings/${listingId}/handover`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' }
+    });
+    window.dispatchEvent(new Event('listingsUpdated'));
+    return await res.json();
+  } catch (err) {
+    console.error('Failed to confirm handover:', err);
+  }
+}
+
+export async function cancelReservation(listingId) {
+  try {
+    const res = await fetch(`${API_URL}/listings/${listingId}/cancel-reservation`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' }
+    });
+    window.dispatchEvent(new Event('listingsUpdated'));
+    return await res.json();
+  } catch (err) {
+    console.error('Failed to cancel reservation:', err);
   }
 }
 
