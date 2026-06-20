@@ -19,6 +19,22 @@ export default function Dashboard() {
   const [editItemTitle, setEditItemTitle] = useState('');
   const [editItemPrice, setEditItemPrice] = useState('');
 
+  // Edit profile states
+  const [showEditProfileModal, setShowEditProfileModal] = useState(false);
+  const [editName, setEditName] = useState('');
+  const [editMajor, setEditMajor] = useState('');
+  const [editYear, setEditYear] = useState('');
+  const [editAvatar, setEditAvatar] = useState('');
+  const [editAbout, setEditAbout] = useState('');
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
+  const [showHelpModal, setShowHelpModal] = useState(false);
+
+  // Settings State
+  const [darkMode, setDarkMode] = useState(false);
+  const [emailNotifs, setEmailNotifs] = useState(true);
+  const [publicProfile, setPublicProfile] = useState(true);
+
   // Initial Seed & Load
   useEffect(() => {
     const fetchData = async () => {
@@ -197,37 +213,143 @@ export default function Dashboard() {
     await toggleFavorite(id);
   };
 
+  const openEditProfileModal = () => {
+    setEditName(profile.name);
+    setEditMajor(profile.major);
+    setEditYear(profile.year || '');
+    setEditAvatar(profile.avatar || '');
+    setEditAbout(profile.about || '');
+    setShowEditProfileModal(true);
+  };
+
+  const handleSaveProfile = async (e) => {
+    e.preventDefault();
+    const updated = {
+      ...profile,
+      name: editName.trim() || profile.name,
+      major: editMajor.trim() || profile.major,
+      year: editYear.trim() || profile.year,
+      avatar: editAvatar.trim() || profile.avatar,
+      about: editAbout.trim()
+    };
+
+    setProfile(updated);
+    await saveProfile(updated);
+    setShowEditProfileModal(false);
+  };
+
   // Sales Made estimate
   const salesMadeTotal = (profile.salesCount || 0) * 40.00;
 
   return (
     <div className="p-margin-mobile md:p-margin-desktop w-full max-w-max-width mx-auto flex flex-col gap-lg pb-24 pt-6">
       
-      {/* Welcome Panel */}
-      <section className="relative bg-surface-container-lowest rounded-2xl border border-outline-variant/30 p-lg shadow-sm flex flex-col md:flex-row items-center justify-between gap-md overflow-hidden">
-        <div className="absolute inset-y-0 right-0 w-[300px] bg-gradient-to-l from-primary/5 to-transparent rounded-r-2xl pointer-events-none"></div>
-        <div className="flex items-center gap-md text-center md:text-left flex-col md:flex-row">
-          <div className="relative w-20 h-20 rounded-full overflow-hidden border-2 border-primary/20 shadow-sm shrink-0">
-            <img alt="User Avatar" className="w-full h-full object-cover" src={profile.avatar || "https://via.placeholder.com/80"}/>
+      {/* Header / Profile Summary Bento */}
+      <section className="flex flex-col lg:flex-row gap-gutter mb-xl">
+        {/* Main Profile Card */}
+        <div className="flex-1 bg-surface-container-lowest rounded-xl border border-surface-variant p-lg flex flex-col md:flex-row items-center md:items-start gap-lg relative shadow-sm">
+          {/* Ambient Glow */}
+          <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -z-10 translate-x-1/2 -translate-y-1/2"></div>
+          
+          <div className="relative shrink-0">
+            <img 
+              alt="User Profile" 
+              className="w-32 h-32 rounded-full object-cover border-4 border-surface shadow-sm" 
+              src={profile.avatar || "https://via.placeholder.com/128"}
+            />
+            <div className="absolute -bottom-2 -right-2 bg-secondary-container text-on-secondary-container rounded-full p-1 border-2 border-surface shadow-sm flex items-center justify-center h-10 w-10">
+              <span className="material-symbols-outlined text-[20px] icon-fill">verified</span>
+            </div>
           </div>
-          <div>
-            <h1 className="font-display text-2xl font-black text-on-surface flex items-center gap-2 justify-center md:justify-start">
-              Welcome back, <span>{profile.name}</span>! 👋
-            </h1>
-            <p className="font-body-md text-on-surface-variant text-sm mt-1 flex items-center justify-center md:justify-start gap-1">
-              <span className="material-symbols-outlined text-primary text-[18px]">school</span>
-              <span>{profile.major} {profile.year && `• ${profile.year}`}</span>
-            </p>
+
+          <div className="flex-grow text-center md:text-left flex flex-col justify-center h-full">
+            <div className="flex flex-col md:flex-row md:items-center gap-sm mb-2">
+              <h1 className="font-headline-lg text-headline-lg text-on-surface font-black leading-none">
+                {profile.name}
+              </h1>
+              <span className="inline-flex items-center gap-1 bg-surface-container px-3 py-1 rounded-full font-label-sm text-label-sm text-primary w-fit mx-auto md:mx-0 font-semibold">
+                <span className="material-symbols-outlined text-[16px]">school</span>
+                {profile.major} {profile.year && `• ${profile.year}`}
+              </span>
+            </div>
+            
+            {profile.about && (
+              <p className="font-body-md text-body-md text-on-surface-variant mb-4 max-w-lg leading-relaxed whitespace-pre-line">
+                {profile.about}
+              </p>
+            )}
+
+            <div className="flex flex-wrap gap-sm justify-center md:justify-start">
+              <button 
+                onClick={openEditProfileModal}
+                className="bg-primary text-on-primary font-label-md text-label-md px-6 py-2 rounded-lg hover:bg-primary/95 transition-colors shadow-sm font-semibold border-0 cursor-pointer active:scale-95 duration-100"
+              >
+                Edit Profile
+              </button>
+              <button 
+                onClick={() => {
+                  navigator.clipboard.writeText(window.location.href);
+                  alert("Profile link copied to clipboard!");
+                }}
+                className="border border-outline-variant bg-transparent text-on-surface font-label-md text-label-md px-4 py-2 rounded-lg hover:bg-surface-container-low transition-colors cursor-pointer"
+              >
+                Share Profile
+              </button>
+              <div className="relative">
+                <button 
+                  onClick={() => setShowDropdown(!showDropdown)}
+                  className="border border-outline-variant bg-transparent text-on-surface p-2 rounded-lg hover:bg-surface-container-low transition-colors cursor-pointer"
+                >
+                  <span className="material-symbols-outlined">more_horiz</span>
+                </button>
+                
+                {showDropdown && (
+                  <div className="absolute right-0 mt-2 w-48 bg-surface-container-lowest border border-surface-variant rounded-xl shadow-lg overflow-hidden z-10 flex flex-col">
+                    <button 
+                      onClick={() => { setShowSettingsModal(true); setShowDropdown(false); }}
+                      className="text-left px-4 py-3 font-body-md hover:bg-surface-container-low transition-colors text-on-surface border-0 bg-transparent cursor-pointer flex items-center gap-2"
+                    >
+                      <span className="material-symbols-outlined text-[18px]">settings</span>
+                      Settings
+                    </button>
+                    <button 
+                      onClick={() => { setShowHelpModal(true); setShowDropdown(false); }}
+                      className="text-left px-4 py-3 font-body-md hover:bg-surface-container-low transition-colors text-on-surface border-0 border-b border-surface-variant bg-transparent cursor-pointer flex items-center gap-2"
+                    >
+                      <span className="material-symbols-outlined text-[18px]">help</span>
+                      Help & Support
+                    </button>
+                    <button 
+                      onClick={() => {
+                        localStorage.removeItem('is_logged_in');
+                        localStorage.removeItem('user_email');
+                        window.dispatchEvent(new Event('authChanged'));
+                        window.dispatchEvent(new Event('profileChanged'));
+                        navigate('/login');
+                      }}
+                      className="text-left px-4 py-3 font-body-md hover:bg-error/10 transition-colors text-error border-0 bg-transparent cursor-pointer flex items-center gap-2 font-semibold"
+                    >
+                      <span className="material-symbols-outlined text-[18px]">logout</span>
+                      Log Out
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         </div>
-        <div className="bg-gradient-to-tr from-primary/10 to-primary/5 border border-primary/20 px-6 py-4 rounded-xl flex items-center gap-md shrink-0">
-          <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center text-on-primary shadow-sm shrink-0">
-            <span className="material-symbols-outlined icon-fill">trophy</span>
+
+        {/* Trust Rank Card */}
+        <div className="lg:w-80 bg-gradient-to-br from-surface-container-lowest to-surface-container-low rounded-xl border border-surface-variant p-lg flex flex-col justify-center items-center text-center shadow-sm">
+          <div className="w-16 h-16 bg-gradient-to-tr from-tertiary-container to-tertiary-fixed-dim rounded-full flex items-center justify-center mb-4 shadow-sm shrink-0">
+            <span className="material-symbols-outlined text-white text-[32px] icon-fill">trophy</span>
           </div>
-          <div>
-            <p className="font-label-sm text-[11px] text-primary uppercase tracking-widest font-extrabold">Trust Ranking</p>
-            <p className="font-headline-md text-lg font-bold text-on-surface">{profile.points > 0 ? 'Top 12%' : 'New Seller'} ({profile.points ? profile.points.toLocaleString() : '0'} pts)</p>
+          <h3 className="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider mb-1 font-bold">Campus Trust Rank</h3>
+          <div className="font-display text-display text-on-surface mb-2 font-black">Top 5%</div>
+          <div className="w-full bg-surface-variant rounded-full h-2 mb-2 overflow-hidden">
+            <div className="bg-primary h-2 rounded-full w-[95%]"></div>
           </div>
+          <p className="font-label-sm text-label-sm text-on-surface-variant">15 more sales to reach Elite Tier</p>
         </div>
       </section>
 
@@ -515,6 +637,227 @@ export default function Dashboard() {
                 Save Price
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Profile Modal Dialog */}
+      {showEditProfileModal && (
+        <div className="fixed inset-0 z-[100] bg-inverse-surface/40 backdrop-blur-sm flex items-center justify-center p-md">
+          <div className="bg-white dark:bg-inverse-surface border border-outline-variant/30 rounded-xl max-w-md w-full p-lg shadow-2xl flex flex-col gap-md">
+            <h3 className="font-headline-md text-headline-md font-bold text-on-surface">Edit Profile</h3>
+            <form onSubmit={handleSaveProfile} className="space-y-md text-left">
+              <div>
+                <label className="block font-label-md text-label-md text-on-surface-variant mb-xs">Full Name</label>
+                <input 
+                  type="text" 
+                  value={editName}
+                  onChange={(e) => setEditName(e.target.value)}
+                  className="w-full rounded-lg border border-outline-variant bg-surface-container-lowest px-md py-2.5 text-body-md font-body-md outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+                />
+              </div>
+              <div>
+                <label className="block font-label-md text-label-md text-on-surface-variant mb-xs">Branch / Major</label>
+                <input 
+                  type="text" 
+                  value={editMajor}
+                  onChange={(e) => setEditMajor(e.target.value)}
+                  className="w-full rounded-lg border border-outline-variant bg-surface-container-lowest px-md py-2.5 text-body-md font-body-md outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+                />
+              </div>
+              <div>
+                <label className="block font-label-md text-label-md text-on-surface-variant mb-xs">Year</label>
+                <input 
+                  type="text" 
+                  value={editYear}
+                  onChange={(e) => setEditYear(e.target.value)}
+                  className="w-full rounded-lg border border-outline-variant bg-surface-container-lowest px-md py-2.5 text-body-md font-body-md outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+                />
+              </div>
+              <div>
+                <label className="block font-label-md text-label-md text-on-surface-variant mb-xs">About Me</label>
+                <textarea 
+                  value={editAbout}
+                  onChange={(e) => setEditAbout(e.target.value)}
+                  placeholder="Tell people a bit about yourself..."
+                  rows="3"
+                  className="w-full rounded-lg border border-outline-variant bg-surface-container-lowest px-md py-2.5 text-body-md font-body-md outline-none focus:border-primary focus:ring-1 focus:ring-primary resize-none"
+                ></textarea>
+              </div>
+              <div>
+                <label className="block font-label-md text-label-md text-on-surface-variant mb-xs">Avatar</label>
+                <div className="flex flex-wrap gap-3">
+                  {["Felix", "Aneka", "Jack", "Sarah", "Milo"].map(seed => {
+                    const url = `https://api.dicebear.com/9.x/adventurer/svg?seed=${seed}`;
+                    return (
+                      <button 
+                        type="button"
+                        key={seed}
+                        onClick={() => setEditAvatar(url)}
+                        className={`w-12 h-12 rounded-full overflow-hidden border-2 cursor-pointer p-0 bg-surface-container transition-all ${editAvatar === url ? 'border-primary scale-110 shadow-md' : 'border-transparent opacity-80 hover:opacity-100'}`}
+                      >
+                        <img src={url} alt={seed} className="w-full h-full object-cover" />
+                      </button>
+                    );
+                  })}
+                  
+                  {/* File Upload Button */}
+                  <label className={`w-12 h-12 rounded-full border-2 border-dashed flex items-center justify-center cursor-pointer transition-colors relative overflow-hidden ${editAvatar && editAvatar.startsWith('data:image') ? 'border-primary scale-110 shadow-md' : 'border-outline-variant bg-surface-container-lowest hover:border-primary text-on-surface-variant hover:text-primary'}`}>
+                    {editAvatar && editAvatar.startsWith('data:image') ? (
+                      <img src={editAvatar} alt="Custom Avatar" className="w-full h-full object-cover" />
+                    ) : (
+                      <span className="material-symbols-outlined text-[20px]">upload</span>
+                    )}
+                    <input 
+                      type="file" 
+                      accept="image/*" 
+                      className="hidden" 
+                      onChange={(e) => {
+                        const file = e.target.files[0];
+                        if (file) {
+                          const reader = new FileReader();
+                          reader.onloadend = () => setEditAvatar(reader.result);
+                          reader.readAsDataURL(file);
+                        }
+                      }} 
+                    />
+                  </label>
+                </div>
+              </div>
+              <div className="flex justify-end gap-sm mt-md pt-2">
+                <button 
+                  type="button"
+                  onClick={() => setShowEditProfileModal(false)}
+                  className="px-md py-2 border border-outline-variant rounded-lg font-label-md text-label-md hover:bg-surface-container-low transition-colors text-on-surface cursor-pointer bg-transparent"
+                >
+                  Cancel
+                </button>
+                <button 
+                  type="submit"
+                  className="px-md py-2 bg-primary text-on-primary rounded-lg font-label-md text-label-md hover:bg-primary/95 transition-colors shadow-sm cursor-pointer border-0 font-semibold active:scale-95"
+                >
+                  Save Changes
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Settings Modal */}
+      {showSettingsModal && (
+        <div className="fixed inset-0 z-[100] bg-inverse-surface/40 backdrop-blur-sm flex items-center justify-center p-md">
+          <div className="bg-white dark:bg-inverse-surface border border-outline-variant/30 rounded-xl max-w-md w-full p-lg shadow-2xl flex flex-col gap-md">
+            <div className="flex justify-between items-center">
+              <h3 className="font-headline-md text-headline-md font-bold text-on-surface">Settings</h3>
+              <button onClick={() => setShowSettingsModal(false)} className="text-on-surface-variant hover:text-on-surface cursor-pointer border-0 bg-transparent p-1">
+                <span className="material-symbols-outlined">close</span>
+              </button>
+            </div>
+            
+            <div className="space-y-4 my-2">
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="font-label-lg font-bold text-on-surface">Dark Mode</div>
+                  <div className="font-body-sm text-on-surface-variant">Switch to dark aesthetic</div>
+                </div>
+                <button 
+                  onClick={() => {
+                    setDarkMode(!darkMode);
+                    document.documentElement.classList.toggle('dark');
+                  }}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors cursor-pointer border-0 ${darkMode ? 'bg-primary' : 'bg-surface-variant'}`}
+                >
+                  <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${darkMode ? 'translate-x-6' : 'translate-x-1'}`}/>
+                </button>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="font-label-lg font-bold text-on-surface">Email Notifications</div>
+                  <div className="font-body-sm text-on-surface-variant">Get alerts for new messages</div>
+                </div>
+                <button 
+                  onClick={() => setEmailNotifs(!emailNotifs)}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors cursor-pointer border-0 ${emailNotifs ? 'bg-primary' : 'bg-surface-variant'}`}
+                >
+                  <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${emailNotifs ? 'translate-x-6' : 'translate-x-1'}`}/>
+                </button>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="font-label-lg font-bold text-on-surface">Public Profile</div>
+                  <div className="font-body-sm text-on-surface-variant">Allow non-students to see you</div>
+                </div>
+                <button 
+                  onClick={() => setPublicProfile(!publicProfile)}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors cursor-pointer border-0 ${publicProfile ? 'bg-primary' : 'bg-surface-variant'}`}
+                >
+                  <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${publicProfile ? 'translate-x-6' : 'translate-x-1'}`}/>
+                </button>
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-sm mt-4 pt-4 border-t border-surface-variant">
+              <button 
+                onClick={() => setShowSettingsModal(false)}
+                className="px-6 py-2 bg-primary text-on-primary rounded-lg font-label-md text-label-md hover:bg-primary/95 transition-colors shadow-sm cursor-pointer border-0 font-semibold active:scale-95 w-full"
+              >
+                Save Settings
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Help & Support Modal */}
+      {showHelpModal && (
+        <div className="fixed inset-0 z-[100] bg-inverse-surface/40 backdrop-blur-sm flex items-center justify-center p-md">
+          <div className="bg-white dark:bg-inverse-surface border border-outline-variant/30 rounded-xl max-w-md w-full p-lg shadow-2xl flex flex-col gap-md">
+            <div className="flex justify-between items-center mb-2">
+              <h3 className="font-headline-md text-headline-md font-bold text-on-surface">Help & Support</h3>
+              <button onClick={() => setShowHelpModal(false)} className="text-on-surface-variant hover:text-on-surface cursor-pointer border-0 bg-transparent p-1">
+                <span className="material-symbols-outlined">close</span>
+              </button>
+            </div>
+            
+            <form onSubmit={(e) => {
+              e.preventDefault();
+              alert("Your message has been sent to our support team!");
+              setShowHelpModal(false);
+            }} className="space-y-4">
+              <div>
+                <label className="block font-label-md text-label-md text-on-surface-variant mb-xs">How can we help?</label>
+                <select className="w-full rounded-lg border border-outline-variant bg-surface-container-lowest px-md py-2.5 text-body-md font-body-md outline-none focus:border-primary focus:ring-1 focus:ring-primary cursor-pointer">
+                  <option>Account Issue</option>
+                  <option>Report a Listing</option>
+                  <option>Payment Dispute</option>
+                  <option>Feature Request</option>
+                  <option>Other</option>
+                </select>
+              </div>
+              
+              <div>
+                <label className="block font-label-md text-label-md text-on-surface-variant mb-xs">Message</label>
+                <textarea 
+                  required
+                  rows="4"
+                  placeholder="Describe your issue in detail..."
+                  className="w-full rounded-lg border border-outline-variant bg-surface-container-lowest px-md py-2.5 text-body-md font-body-md outline-none focus:border-primary focus:ring-1 focus:ring-primary resize-none"
+                ></textarea>
+              </div>
+
+              <div className="flex justify-end gap-sm mt-md pt-2">
+                <button 
+                  type="submit"
+                  className="px-6 py-2 bg-primary text-on-primary rounded-lg font-label-md text-label-md hover:bg-primary/95 transition-colors shadow-sm cursor-pointer border-0 font-semibold active:scale-95 w-full flex items-center justify-center gap-2"
+                >
+                  <span className="material-symbols-outlined text-[18px]">send</span>
+                  Send Message
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

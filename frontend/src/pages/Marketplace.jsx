@@ -30,11 +30,21 @@ export default function Marketplace() {
   // Mobile drawer visibility
   const [showMobileFilters, setShowMobileFilters] = useState(false);
 
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 6;
+
   // Sync search input with url search parameter
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     setSearchQuery(params.get('search') || '');
+    setCurrentPage(1);
   }, [location.search]);
+
+  // Reset page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [mode, selectedCategories, minPrice, maxPrice, selectedConditions, sortBy]);
 
   // Sync changes to listings or favorites across pages
   useEffect(() => {
@@ -144,6 +154,10 @@ export default function Marketplace() {
       return tB - tA;
     });
   }
+
+  // Pagination calculation
+  const totalPages = Math.ceil(sortedListings.length / ITEMS_PER_PAGE);
+  const paginatedListings = sortedListings.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
 
   return (
     <div className="p-margin-mobile md:p-margin-desktop w-full max-w-max-width mx-auto flex flex-col lg:flex-row gap-xl pt-6">
@@ -287,7 +301,7 @@ export default function Marketplace() {
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-gutter">
-            {sortedListings.map(item => {
+            {paginatedListings.map(item => {
               let isRentedOut = false;
               if (item.status === 'rented' && item.rentedUntil) {
                 if (new Date(item.rentedUntil) > new Date()) {
@@ -388,18 +402,32 @@ export default function Marketplace() {
           </div>
         )}
 
-        {/* Pagination Indicator (Mock) */}
-        {sortedListings.length > 0 && (
+        {/* Pagination Indicator */}
+        {totalPages > 1 && (
           <div className="flex justify-center items-center gap-xs mt-xl border-t border-outline-variant/30 pt-lg">
-            <button className="p-2 text-outline hover:text-primary hover:bg-surface-container-low rounded-md transition-colors">
+            <button 
+              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+              disabled={currentPage === 1}
+              className="p-2 text-outline hover:text-primary hover:bg-surface-container-low rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+            >
               <span className="material-symbols-outlined">chevron_left</span>
             </button>
-            <button className="w-8 h-8 flex items-center justify-center rounded-md bg-primary text-on-primary font-label-md font-semibold shadow-sm">1</button>
-            <button className="w-8 h-8 flex items-center justify-center rounded-md text-on-surface hover:bg-surface-container-low font-label-md transition-colors">2</button>
-            <button className="w-8 h-8 flex items-center justify-center rounded-md text-on-surface hover:bg-surface-container-low font-label-md transition-colors">3</button>
-            <span className="text-outline mx-1">...</span>
-            <button className="w-8 h-8 flex items-center justify-center rounded-md text-on-surface hover:bg-surface-container-low font-label-md transition-colors">12</button>
-            <button className="p-2 text-outline hover:text-primary hover:bg-surface-container-low rounded-md transition-colors">
+            
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map(pageNum => (
+              <button 
+                key={pageNum}
+                onClick={() => setCurrentPage(pageNum)}
+                className={`w-8 h-8 flex items-center justify-center rounded-md font-label-md transition-colors cursor-pointer ${currentPage === pageNum ? 'bg-primary text-on-primary font-semibold shadow-sm' : 'text-on-surface hover:bg-surface-container-low'}`}
+              >
+                {pageNum}
+              </button>
+            ))}
+
+            <button 
+              onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+              disabled={currentPage === totalPages}
+              className="p-2 text-outline hover:text-primary hover:bg-surface-container-low rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+            >
               <span className="material-symbols-outlined">chevron_right</span>
             </button>
           </div>
