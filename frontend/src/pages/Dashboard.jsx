@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { getListings, saveListings, getProfile, saveProfile, getFavorites, toggleFavorite, getTransactionHistory, confirmHandover, cancelReservation } from '../db';
+import { getListings, saveListings, getProfile, saveProfile, getFavorites, toggleFavorite, getTransactionHistory, confirmHandover, cancelReservation, deleteListing, deleteAccount } from '../db';
 
 const DEFAULT_RENTALS = [];
 
@@ -243,11 +243,11 @@ export default function Dashboard() {
   };
 
   // Delete listing permanently
-  const handleDeleteListing = (id, title) => {
+  const handleDeleteListing = async (id, title) => {
     if (window.confirm(`Delete "${title}" permanently?`)) {
       const updatedListings = listings.filter(item => item.id !== id);
-      setListings(updatedListings);
-      saveListings(updatedListings);
+      setListings(updatedListings); // optimistic update
+      await deleteListing(id);
     }
   };
 
@@ -369,10 +369,27 @@ export default function Dashboard() {
                         window.dispatchEvent(new Event('profileChanged'));
                         navigate('/login');
                       }}
-                      className="text-left px-4 py-3 font-body-md hover:bg-error/10 transition-colors text-error border-0 bg-transparent cursor-pointer flex items-center gap-2 font-semibold"
+                      className="text-left px-4 py-3 font-body-md hover:bg-surface-container-low transition-colors text-on-surface border-0 bg-transparent cursor-pointer flex items-center gap-2"
                     >
                       <span className="material-symbols-outlined text-[18px]">logout</span>
                       Log Out
+                    </button>
+                    <button 
+                      onClick={async () => {
+                        if (window.confirm("Are you sure you want to permanently delete your account? All your listings will be removed, and pending transactions will be cancelled. This action cannot be undone.")) {
+                          const success = await deleteAccount();
+                          if (success) {
+                            alert("Your account has been deleted.");
+                            navigate('/login');
+                          } else {
+                            alert("Failed to delete account. Please try again.");
+                          }
+                        }
+                      }}
+                      className="text-left px-4 py-3 font-body-md hover:bg-error/10 transition-colors text-error border-0 bg-transparent cursor-pointer flex items-center gap-2 font-semibold"
+                    >
+                      <span className="material-symbols-outlined text-[18px]">person_remove</span>
+                      Delete Account
                     </button>
                   </div>
                 )}

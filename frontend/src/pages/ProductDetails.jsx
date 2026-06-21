@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { getListings, getFavorites, toggleFavorite, getProfile, createMessageThread, createNotification, reserveItem, reserveRentItem } from '../db';
+import { getListings, getFavorites, toggleFavorite, getProfile, createMessageThread, createNotification, reserveItem, reserveRentItem, createReport, getListingById } from '../db';
 
 export default function ProductDetails() {
   const { id } = useParams();
@@ -15,17 +15,23 @@ export default function ProductDetails() {
   const [pickupLocation, setPickupLocation] = useState('Student Union Building');
   const [customPickupLocation, setCustomPickupLocation] = useState('');
   const [rentalDuration, setRentalDuration] = useState('1 week');
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [reportReason, setReportReason] = useState('Counterfeit Item');
+  const [reportDescription, setReportDescription] = useState('');
+  const [product, setProduct] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchInitialData = async () => {
       setListings(await getListings());
       setFavorites(await getFavorites());
+      setProduct(await getListingById(id));
+      setLoading(false);
     };
     fetchInitialData();
-  }, []);
+  }, [id]);
 
-  // Find active product
-  const product = listings.find(item => item.id === id);
+
 
   useEffect(() => {
     // Scroll to top on page navigation
@@ -45,6 +51,15 @@ export default function ProductDetails() {
       window.removeEventListener('favoritesUpdated', handleFavoritesUpdate);
     };
   }, []);
+
+  if (loading) {
+    return (
+      <div className="p-margin-mobile md:p-margin-desktop text-center py-20">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+        <p className="font-body-md text-on-surface-variant">Loading listing...</p>
+      </div>
+    );
+  }
 
   if (!product) {
     return (
@@ -186,6 +201,31 @@ export default function ProductDetails() {
       navigate(`/messages?threadId=${thread.threadId}`);
     } else {
       alert("Failed to create message thread");
+    }
+  };
+
+  const handleReportSubmit = async () => {
+    const profile = await getProfile();
+    if (!profile || !profile.email) {
+      navigate('/login');
+      return;
+    }
+    
+    try {
+      await createReport({
+        listingId: product.id,
+        listingTitle: product.title,
+        reporterEmail: profile.email,
+        reason: reportReason,
+        description: reportReason === 'Other' ? reportDescription : '',
+        image: productImages[0]
+      });
+      alert('Report submitted successfully. Our team will review it shortly.');
+      setShowReportModal(false);
+      setReportReason('Counterfeit Item');
+      setReportDescription('');
+    } catch (err) {
+      alert('Failed to submit report. Please try again.');
     }
   };
 
@@ -378,6 +418,14 @@ export default function ProductDetails() {
                 </button>
               </div>
             </div>
+            
+            <button 
+              onClick={() => setShowReportModal(true)}
+              className="mt-2 text-on-surface-variant hover:text-error transition-colors font-label-sm text-label-sm flex items-center justify-center gap-1 border-0 bg-transparent cursor-pointer"
+            >
+              <span className="material-symbols-outlined text-[14px]">flag</span>
+              Report Listing
+            </button>
           </div>
         </div>
       </div>
@@ -575,6 +623,76 @@ export default function ProductDetails() {
                   className="flex-1 py-3 rounded-xl bg-primary text-on-primary font-label-md font-bold hover:bg-primary/95 transition-colors shadow-sm cursor-pointer border-0"
                 >
                   Reserve Item
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Report Modal */}
+      {showReportModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-inverse-surface/60 backdrop-blur-sm p-4">
+          <div className="bg-surface rounded-2xl shadow-xl w-full max-w-md overflow-hidden">
+            <div className="p-6">
+              <div className="flex justify-between items-start mb-4">
+                <h3 className="font-headline-md text-xl font-bold text-error flex items-center gap-2">
+                  <span className="material-symbols-outlined text-[24px]">warning</span>
+                  Report Listing
+                </h3>
+                <button 
+                  onClick={() => setShowReportModal(false)}
+                  className="text-outline hover:text-on-surface transition-colors border-0 bg-transparent cursor-pointer"
+                >
+                  <span className="material-symbols-outlined">close</span>
+                </button>
+              </div>
+              <p className="text-on-surface-variant text-sm mb-4">
+                Please let us know why you are reporting this listing. Your report will be reviewed by our moderation team.
+              </p>
+              <div className="space-y-3 mb-6">
+                {['Counterfeit Item', 'Misleading Price', 'Inappropriate Content', 'Other'].map(reason => (
+                  <label key={reason} className="flex items-center gap-3 cursor-pointer">
+                    <input 
+                      type="radio" 
+                      name="reportReason" 
+                      value={reason} 
+                      checked={reportReason === reason}
+                      onChange={(e) => setReportReason(e.target.value)}
+                      className="w-4 h-4 text-primary focus:ring-primary border-outline-variant"
+                    />
+                    <span className="text-on-surface font-label-md">{reason}</span>
+                  </label>
+                ))}
+              </div>
+              
+              {reportReason === 'Other' && (
+                <div className="mb-6">
+                  <label className="block text-sm font-bold text-on-surface-variant mb-1">Please describe the issue:</label>
+                  <textarea 
+                    rows="3"
+                    value={reportDescription}
+                    onChange={(e) => setReportDescription(e.target.value)}
+                    placeholder="Provide details about the problem..."
+                    className="w-full bg-surface-container border border-outline-variant/50 rounded-lg p-2.5 text-on-surface focus:ring-2 focus:ring-primary focus:outline-none resize-none"
+                    required
+                  ></textarea>
+                </div>
+              )}
+              
+              <div className="flex gap-3">
+                <button 
+                  onClick={() => setShowReportModal(false)}
+                  className="flex-1 py-3 rounded-xl border border-outline-variant/50 text-on-surface font-label-md hover:bg-surface-container-low transition-colors bg-transparent cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button 
+                  onClick={handleReportSubmit}
+                  disabled={reportReason === 'Other' && !reportDescription.trim()}
+                  className="flex-1 py-3 rounded-xl bg-error text-white font-label-md font-bold hover:bg-error/90 transition-colors shadow-sm cursor-pointer border-0 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Submit Report
                 </button>
               </div>
             </div>

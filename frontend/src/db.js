@@ -96,14 +96,30 @@ export async function getListings() {
 
 export async function saveListing(listing) {
   try {
-    await fetch(`${API_URL}/listings`, {
+    const res = await fetch(`${API_URL}/listings`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(listing)
     });
+    if (!res.ok) {
+      const data = await res.json();
+      throw new Error(data.error || 'Failed to save listing');
+    }
     window.dispatchEvent(new Event('listingsUpdated'));
   } catch (err) {
     console.error('Failed to save listing:', err);
+    throw err;
+  }
+}
+
+export async function getListingById(id) {
+  try {
+    const res = await fetch(`${API_URL}/listings/${encodeURIComponent(id)}`);
+    if (!res.ok) return null;
+    return await res.json();
+  } catch (err) {
+    console.error(`Failed to fetch listing ${id}:`, err);
+    return null;
   }
 }
 
@@ -325,5 +341,135 @@ export async function getTransactionHistory(email) {
   } catch (err) {
     console.error('Failed to fetch transaction history:', err);
     return [];
+  }
+}
+
+export async function deleteListing(id) {
+  try {
+    const res = await fetch(`${API_URL}/listings/${id}`, {
+      method: 'DELETE'
+    });
+    if (!res.ok) {
+      throw new Error('Failed to delete listing');
+    }
+    window.dispatchEvent(new Event('listingsUpdated'));
+  } catch (err) {
+    console.error('Failed to delete listing:', err);
+  }
+}
+export async function deleteAccount() {
+  try {
+    const email = localStorage.getItem('user_email');
+    if (!email) return false;
+    
+    const res = await fetch(`${API_URL}/profile?email=${encodeURIComponent(email)}`, {
+      method: 'DELETE'
+    });
+    
+    if (!res.ok) {
+      throw new Error('Failed to delete account');
+    }
+        // Clear local storage
+    localStorage.removeItem('is_logged_in');
+    localStorage.removeItem('user_email');
+    
+    window.dispatchEvent(new Event('authChanged'));
+    return true;
+  } catch (err) {
+    console.error('Failed to delete account:', err);
+    return false;
+  }
+}
+
+export async function createReport(reportData) {
+  try {
+    const res = await fetch(`${API_URL}/reports`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(reportData)
+    });
+    if (!res.ok) throw new Error('Failed to submit report');
+    return await res.json();
+  } catch (err) {
+    console.error('Error submitting report:', err);
+    throw err;
+  }
+}
+
+export async function getReports() {
+  try {
+    const res = await fetch(`${API_URL}/reports`);
+    if (!res.ok) throw new Error('Failed to fetch reports');
+    return await res.json();
+  } catch (err) {
+    console.error('Error fetching reports:', err);
+    return [];
+  }
+}
+
+export async function updateReportStatus(id, action) {
+  try {
+    const res = await fetch(`${API_URL}/reports/${id}/action`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action })
+    });
+    if (!res.ok) throw new Error('Failed to update report status');
+    return await res.json();
+  } catch (err) {
+    console.error('Error updating report:', err);
+    throw err;
+  }
+}
+
+export async function createChatReport(reportData) {
+  try {
+    const res = await fetch(`${API_URL}/chat-reports`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(reportData)
+    });
+    if (!res.ok) throw new Error('Failed to submit chat report');
+    return await res.json();
+  } catch (err) {
+    console.error('Error submitting chat report:', err);
+    throw err;
+  }
+}
+
+export async function getChatReports() {
+  try {
+    const res = await fetch(`${API_URL}/chat-reports`);
+    if (!res.ok) throw new Error('Failed to fetch chat reports');
+    return await res.json();
+  } catch (err) {
+    console.error('Error fetching chat reports:', err);
+    return [];
+  }
+}
+
+export async function updateChatReportStatus(id, action) {
+  try {
+    const res = await fetch(`${API_URL}/chat-reports/${id}/action`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action })
+    });
+    if (!res.ok) throw new Error('Failed to update chat report status');
+    return await res.json();
+  } catch (err) {
+    console.error('Error updating chat report:', err);
+    throw err;
+  }
+}
+
+export async function getAdminThreadMessages(threadId) {
+  try {
+    const res = await fetch(`${API_URL}/admin/messages/${threadId}`);
+    if (!res.ok) return null;
+    return await res.json();
+  } catch (err) {
+    console.error('Error fetching admin messages:', err);
+    return null;
   }
 }

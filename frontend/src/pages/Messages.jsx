@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { getMessages, getProfile, getOtherProfile, markThreadAsRead } from '../db';
+import { getMessages, getProfile, getOtherProfile, markThreadAsRead, createChatReport } from '../db';
 import { io } from 'socket.io-client';
 
 const socket = io('http://localhost:5000');
@@ -18,6 +18,11 @@ export default function Messages() {
   const [searchTerm, setSearchTerm] = useState('');
   const [currentUser, setCurrentUser] = useState(null);
   const [participantProfiles, setParticipantProfiles] = useState({});
+  
+  // Report State
+  const [showOptions, setShowOptions] = useState(false);
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [reportReason, setReportReason] = useState('Abusive Language');
 
   useEffect(() => {
     getProfile().then(setCurrentUser);
@@ -306,12 +311,38 @@ export default function Messages() {
                 >
                   <span className="material-symbols-outlined">call</span>
                 </button>
-                <button 
-                  onClick={() => alert("Options: Report User, Block User, Clear Chat History.")}
-                  className="w-10 h-10 rounded-full hover:bg-surface-container flex items-center justify-center text-outline transition-colors border-0 bg-transparent cursor-pointer"
-                >
-                  <span className="material-symbols-outlined">more_vert</span>
-                </button>
+                <div className="relative">
+                  <button 
+                    onClick={() => setShowOptions(!showOptions)}
+                    className="w-10 h-10 rounded-full hover:bg-surface-container flex items-center justify-center text-outline transition-colors border-0 bg-transparent cursor-pointer"
+                  >
+                    <span className="material-symbols-outlined">more_vert</span>
+                  </button>
+                  {showOptions && (
+                    <div className="absolute right-0 mt-2 w-48 bg-surface border border-outline-variant/30 rounded-xl shadow-lg z-50 py-2">
+                      <button 
+                        onClick={() => {
+                          setShowOptions(false);
+                          setShowReportModal(true);
+                        }}
+                        className="w-full text-left px-4 py-2 hover:bg-surface-container flex items-center gap-2 text-error cursor-pointer border-0 bg-transparent font-label-md"
+                      >
+                        <span className="material-symbols-outlined text-[20px]">flag</span>
+                        Report Conversation
+                      </button>
+                      <button 
+                        onClick={() => {
+                          setShowOptions(false);
+                          alert('Chat cleared locally.');
+                        }}
+                        className="w-full text-left px-4 py-2 hover:bg-surface-container flex items-center gap-2 text-on-surface cursor-pointer border-0 bg-transparent font-label-md"
+                      >
+                        <span className="material-symbols-outlined text-[20px]">delete</span>
+                        Clear Chat
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
             </header>
 
@@ -434,6 +465,77 @@ export default function Messages() {
           </div>
         )}
       </section>
+
+      {/* Report Modal */}
+      {showReportModal && activeThread && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="bg-surface rounded-3xl p-6 md:p-8 max-w-[400px] w-full shadow-lg border border-outline-variant/20">
+            <div className="flex items-center gap-4 mb-6">
+              <div className="w-12 h-12 rounded-full bg-error-container text-error flex items-center justify-center text-2xl font-bold shrink-0">
+                <span className="material-symbols-outlined">flag</span>
+              </div>
+              <div>
+                <h3 className="font-headline-sm text-headline-sm font-bold text-on-surface">Report Conversation</h3>
+                <p className="font-body-sm text-body-sm text-on-surface-variant mt-1">
+                  Report this chat to admins.
+                </p>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block font-label-md font-semibold text-on-surface mb-2">Select Reason</label>
+                <div className="grid grid-cols-1 gap-2">
+                  {['Abusive Language', 'Spam / Scam', 'Inappropriate Content', 'Other'].map(reason => (
+                    <label key={reason} className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all ${reportReason === reason ? 'border-primary bg-primary-container/20 text-on-surface font-semibold' : 'border-outline-variant/30 text-on-surface hover:bg-surface-container'}`}>
+                      <input 
+                        type="radio" 
+                        name="chatReportReason"
+                        className="hidden" 
+                        checked={reportReason === reason} 
+                        onChange={() => setReportReason(reason)} 
+                      />
+                      <span className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ${reportReason === reason ? 'border-primary' : 'border-outline'}`}>
+                        {reportReason === reason && <span className="w-2.5 h-2.5 rounded-full bg-primary"></span>}
+                      </span>
+                      {reason}
+                    </label>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-3 mt-8 pt-4 border-t border-outline-variant/20">
+              <button 
+                onClick={() => setShowReportModal(false)}
+                className="px-6 py-2.5 rounded-full font-label-lg font-bold text-on-surface hover:bg-surface-container-high transition-colors cursor-pointer border-none bg-transparent"
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={async () => {
+                  try {
+                    const otherEmail = activeThread.participants?.find(e => e !== currentUser?.email);
+                    await createChatReport({
+                      threadId: activeThread.threadId,
+                      reporterEmail: currentUser.email,
+                      reportedUserEmail: otherEmail || 'Unknown',
+                      reason: reportReason
+                    });
+                    setShowReportModal(false);
+                    alert("Report submitted successfully. Admins will review the conversation.");
+                  } catch (err) {
+                    alert("Failed to submit report. Please try again later.");
+                  }
+                }}
+                className="px-6 py-2.5 rounded-full font-label-lg font-bold bg-error hover:bg-error/90 text-on-error transition-colors shadow-sm cursor-pointer border-none"
+              >
+                Submit Report
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

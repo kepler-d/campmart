@@ -77,6 +77,26 @@ const notificationSchema = new mongoose.Schema({
   link: String
 });
 
+const reportSchema = new mongoose.Schema({
+  listingId: { type: String, required: true },
+  listingTitle: String,
+  reporterEmail: { type: String, required: true },
+  reason: { type: String, required: true },
+  description: String,
+  status: { type: String, default: 'Pending' },
+  image: String,
+  createdAt: { type: Date, default: Date.now }
+});
+
+const chatReportSchema = new mongoose.Schema({
+  threadId: { type: String, required: true },
+  reporterEmail: { type: String, required: true },
+  reportedUserEmail: { type: String, required: true },
+  reason: { type: String, required: true },
+  status: { type: String, default: 'Pending' }, // Pending, Dismissed, Resolved
+  createdAt: { type: Date, default: Date.now }
+});
+
 // --- Models ---
 const Listing = mongoose.model('Listing', listingSchema);
 const Profile = mongoose.model('Profile', profileSchema);
@@ -85,7 +105,8 @@ const Favorite = mongoose.model('Favorite', favoriteSchema);
 const AllowedDomain = mongoose.model('AllowedDomain', allowedDomainSchema);
 const CampusRequest = mongoose.model('CampusRequest', campusRequestSchema);
 const Notification = mongoose.model('Notification', notificationSchema);
-
+const Report = mongoose.model('Report', reportSchema);
+const ChatReport = mongoose.model('ChatReport', chatReportSchema);
 
 // --- Defaults ---
 const DEFAULT_LISTINGS = [
@@ -282,5 +303,7 @@ module.exports = {
   Favorite,
   AllowedDomain,
   CampusRequest,
-  Notification
+  Notification,
+  Report,
+  ChatReport
 };

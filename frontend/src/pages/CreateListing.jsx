@@ -83,17 +83,22 @@ export default function CreateListing() {
       description: desc
     };
 
-    await saveListing(newListing);
+    try {
+      await saveListing(newListing);
 
-    // Update profile listings count
-    const updatedProfile = {
-      ...profile,
-      listingsCount: (profile.listingsCount || 0) + 1
-    };
-    await saveProfile(updatedProfile);
+      // Update profile listings count
+      const updatedProfile = {
+        ...profile,
+        listingsCount: (profile.listingsCount || 0) + 1
+      };
+      await saveProfile(updatedProfile);
 
-    alert(`Successfully listed "${newListing.title}"! Redirecting to marketplace.`);
-    navigate('/marketplace');
+      alert(`Successfully listed "${newListing.title}"! Redirecting to marketplace.`);
+      navigate('/marketplace');
+    } catch (err) {
+      alert(err.message || 'Failed to create listing. Please try again.');
+      setIsSubmitting(false);
+    }
   };
 
   // Rent Only checklist state syncing

@@ -3,7 +3,7 @@ const router = express.Router();
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const nodemailer = require('nodemailer');
-const { getDb, Listing, Profile, MessageThread, Favorite, AllowedDomain, CampusRequest, Notification } = require('../db');
+const { getDb, Listing, Profile, MessageThread, Favorite, AllowedDomain, CampusRequest, Notification, Report, ChatReport } = require('../db');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'supersecret_campus_key';
 
@@ -231,6 +231,25 @@ router.post('/listings', async (req, res) => {
       if (newListings.sellerEmail) {
         newListings.domain = '@' + newListings.sellerEmail.split('@')[1];
       }
+      
+      // Prevent duplicate active listings for the same item by the same user
+      const duplicateQuery = {
+        id: { $ne: newListings.id },
+        title: newListings.title,
+        status: 'available'
+      };
+      
+      if (newListings.sellerEmail) {
+        duplicateQuery.sellerEmail = newListings.sellerEmail;
+      } else if (newListings.seller) {
+        duplicateQuery.seller = newListings.seller;
+      }
+
+      const duplicate = await Listing.findOne(duplicateQuery);
+      if (duplicate) {
+        return res.status(400).json({ error: 'You already have an active listing for this exact item.' });
+      }
+
       await Listing.findOneAndUpdate(
         { id: newListings.id },
         newListings,
@@ -240,6 +259,46 @@ router.post('/listings', async (req, res) => {
         delete cache.listings[newListings.domain];
       }
     }
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.get('/listings/:id', async (req, res) => {
+  await getDb();
+  try {
+    const listing = await Listing.findOne({ id: req.params.id });
+    if (!listing) return res.status(404).json({ error: 'Listing not found' });
+    res.json(listing);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.delete('/listings/:id', async (req, res) => {
+  await getDb();
+  try {
+    const { id } = req.params;
+    const listing = await Listing.findOne({ id });
+    if (!listing) return res.status(404).json({ error: 'Listing not found' });
+    
+    // Check if in transaction and notify buyer
+    if (listing.status === 'reserved' || listing.status === 'rented') {
+      const notifyEmail = listing.buyerEmail || listing.rentedByEmail;
+      if (notifyEmail) {
+        await Notification.create({
+          userEmail: notifyEmail,
+          message: `The listing "${listing.title}" you reserved has been deleted by the seller.`,
+          link: '/marketplace'
+        });
+      }
+    }
+    
+    await Listing.deleteOne({ id });
+    await MessageThread.deleteMany({ 'productContext.title': listing.title });
+    
+    cache.listings = {};
     res.json({ success: true });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -400,6 +459,77 @@ router.put('/profile', async (req, res) => {
       { upsert: true }
     );
     delete cache.profile[email]; // Invalidate cache
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.delete('/profile', async (req, res) => {
+  await getDb();
+  const { email } = req.query;
+  if (!email) return res.status(400).json({ error: 'Email required' });
+
+  try {
+    // 1. Find all listings where this user is the buyer/renter
+    const activePurchases = await Listing.find({
+      $or: [ { buyerEmail: email }, { rentedByEmail: email } ]
+    });
+
+    // Notify sellers and reset those listings
+    for (const item of activePurchases) {
+      if (item.status === 'reserved' || item.status === 'rented') {
+        const sellerEmail = item.sellerEmail || item.domain ? item.sellerEmail || `user${item.domain}` : null;
+        if (sellerEmail) {
+          await Notification.create({
+            userEmail: sellerEmail,
+            message: `The user who reserved your item "${item.title}" has deleted their account. Your item is now available again.`,
+            link: '/marketplace'
+          });
+        }
+      }
+      // Revert listing to available
+      item.status = 'available';
+      item.buyerEmail = undefined;
+      item.rentedByEmail = undefined;
+      item.rentedUntil = undefined;
+      item.reservedUntil = undefined;
+      await item.save();
+    }
+
+    // 2. Find all listings where this user is the seller
+    const userListings = await Listing.find({
+      $or: [ { sellerEmail: email }, { seller: (await Profile.findOne({email}))?.name } ]
+    });
+
+    // Notify buyers and delete listings
+    for (const item of userListings) {
+      if (item.status === 'reserved' || item.status === 'rented') {
+        const notifyEmail = item.buyerEmail || item.rentedByEmail;
+        if (notifyEmail) {
+          await Notification.create({
+            userEmail: notifyEmail,
+            message: `The seller of the item "${item.title}" you reserved has deleted their account. The listing has been removed.`,
+            link: '/marketplace'
+          });
+        }
+      }
+      await Listing.deleteOne({ _id: item._id });
+    }
+
+    // 3. Delete Message Threads involving this user
+    await MessageThread.deleteMany({ participants: email });
+
+    // 4. Delete Favorites
+    await Favorite.deleteMany({ userEmail: email });
+
+    // 5. Delete Profile
+    await Profile.deleteOne({ email });
+
+    // Clear caches
+    delete cache.profile[email];
+    cache.listings = {};
+    
     res.json({ success: true });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -592,6 +722,146 @@ router.post('/campus-requests/approve', async (req, res) => {
     await request.save();
 
     res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// --- REPORTS ---
+router.post('/reports', async (req, res) => {
+  await getDb();
+  try {
+    const { listingId, listingTitle, reporterEmail, reason, description, image } = req.body;
+    
+    // Create report
+    const newReport = await Report.create({
+      listingId,
+      listingTitle,
+      reporterEmail,
+      reason,
+      description,
+      image
+    });
+
+    // Notify all admins
+    const admins = await Profile.find({ isAdmin: true });
+    for (const admin of admins) {
+      await Notification.create({
+        userEmail: admin.email,
+        message: `New report filed by ${reporterEmail} against listing "${listingTitle}". Reason: ${reason}.`,
+        link: '/admin'
+      });
+    }
+
+    res.json({ success: true, report: newReport });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.get('/reports', async (req, res) => {
+  await getDb();
+  try {
+    const reports = await Report.find().sort({ createdAt: -1 });
+    res.json(reports);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.post('/reports/:id/action', async (req, res) => {
+  await getDb();
+  try {
+    const { id } = req.params;
+    const { action } = req.body;
+
+    const report = await Report.findById(id);
+    if (!report) return res.status(404).json({ error: 'Report not found' });
+
+    if (action === 'approve') {
+      report.status = 'Approved (Removed)';
+      // Delete the listing
+      await Listing.deleteOne({ id: report.listingId });
+      cache.listings = {}; // Invalidate cache
+    } else if (action === 'dismiss') {
+      report.status = 'Dismissed';
+    }
+
+    await report.save();
+    res.json({ success: true, report });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// --- CHAT REPORTS ---
+router.post('/chat-reports', async (req, res) => {
+  await getDb();
+  try {
+    const { threadId, reporterEmail, reportedUserEmail, reason } = req.body;
+    
+    const newReport = await ChatReport.create({
+      threadId,
+      reporterEmail,
+      reportedUserEmail,
+      reason
+    });
+
+    // Notify all admins
+    const admins = await Profile.find({ isAdmin: true });
+    for (const admin of admins) {
+      await Notification.create({
+        userEmail: admin.email,
+        message: `New chat report filed by ${reporterEmail} against ${reportedUserEmail}. Reason: ${reason}.`,
+        link: '/admin'
+      });
+    }
+
+    res.json({ success: true, report: newReport });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.get('/chat-reports', async (req, res) => {
+  await getDb();
+  try {
+    const reports = await ChatReport.find().sort({ createdAt: -1 });
+    res.json(reports);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.post('/chat-reports/:id/action', async (req, res) => {
+  await getDb();
+  try {
+    const { id } = req.params;
+    const { action } = req.body; // 'dismiss' or 'resolve'
+
+    const report = await ChatReport.findById(id);
+    if (!report) return res.status(404).json({ error: 'Report not found' });
+
+    if (action === 'dismiss') {
+      report.status = 'Dismissed';
+    } else if (action === 'resolve') {
+      report.status = 'Resolved';
+      // Potential side effect: Warn/Ban user. For now just resolve.
+    }
+
+    await report.save();
+    res.json({ success: true, report });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.get('/admin/messages/:threadId', async (req, res) => {
+  await getDb();
+  try {
+    const thread = await MessageThread.findOne({ threadId: req.params.threadId });
+    if (!thread) return res.status(404).json({ error: 'Thread not found' });
+    res.json(thread);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

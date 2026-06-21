@@ -1,11 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import { getCampusRequests, approveCampusRequest } from '../db';
+import { Link } from 'react-router-dom';
+import { getCampusRequests, approveCampusRequest, getReports, updateReportStatus, getChatReports, updateChatReportStatus, getAdminThreadMessages } from '../db';
 
 export default function Admin() {
   const [campusRequests, setCampusRequests] = useState([]);
+  const [reports, setReports] = useState([]);
+  const [chatReports, setChatReports] = useState([]);
+  
+  // Modal State for Chat History
+  const [showChatHistoryModal, setShowChatHistoryModal] = useState(false);
+  const [chatHistoryThread, setChatHistoryThread] = useState(null);
 
   useEffect(() => {
     getCampusRequests().then(setCampusRequests);
+    getReports().then(setReports);
+    getChatReports().then(setChatReports);
   }, []);
 
   const handleApproveCampus = async (id) => {
@@ -18,47 +27,50 @@ export default function Admin() {
     }
   };
 
-  // Moderate reports list
-  const [reports, setReports] = useState([
-    {
-      id: "LST-9921",
-      name: "Intro to Calculus 4th Ed",
-      type: "item",
-      reporter: "john.d@university.edu",
-      reason: "Misleading Price",
-      status: "Pending",
-      image: "https://images.unsplash.com/photo-1532012197267-da84d127e765?auto=format&fit=crop&w=400"
-    },
-    {
-      id: "LST-8834",
-      name: "MacBook Pro 2019",
-      type: "item",
-      reporter: "sarah.m@university.edu",
-      reason: "Counterfeit Item",
-      status: "Pending",
-      image: "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&w=400"
-    },
-    {
-      id: "USR-102",
-      name: "User Profile: \"CampusTrader1\"",
-      type: "user",
-      reporter: "alex.k@university.edu",
-      reason: "Inappropriate Behavior",
-      status: "Reviewed",
-      image: null
+  const handleApproveReport = async (id) => {
+    try {
+      const updatedReport = await updateReportStatus(id, 'approve');
+      setReports(prev => prev.map(r => r._id === id ? { ...r, status: updatedReport.report.status } : r));
+    } catch (err) {
+      alert('Failed to approve report');
     }
-  ]);
-
-  const handleApproveReport = (id) => {
-    setReports(prev =>
-      prev.map(r => r.id === id ? { ...r, status: "Approved (Removed)" } : r)
-    );
   };
 
-  const handleDismissReport = (id) => {
-    setReports(prev =>
-      prev.map(r => r.id === id ? { ...r, status: "Dismissed" } : r)
-    );
+  const handleDismissReport = async (id) => {
+    try {
+      const updatedReport = await updateReportStatus(id, 'dismiss');
+      setReports(prev => prev.map(r => r._id === id ? { ...r, status: updatedReport.report.status } : r));
+    } catch (err) {
+      alert('Failed to dismiss report');
+    }
+  };
+
+  const handleResolveChatReport = async (id) => {
+    try {
+      const updatedReport = await updateChatReportStatus(id, 'resolve');
+      setChatReports(prev => prev.map(r => r._id === id ? { ...r, status: updatedReport.report.status } : r));
+    } catch (err) {
+      alert('Failed to resolve chat report');
+    }
+  };
+
+  const handleDismissChatReport = async (id) => {
+    try {
+      const updatedReport = await updateChatReportStatus(id, 'dismiss');
+      setChatReports(prev => prev.map(r => r._id === id ? { ...r, status: updatedReport.report.status } : r));
+    } catch (err) {
+      alert('Failed to dismiss chat report');
+    }
+  };
+
+  const handleViewChatHistory = async (threadId) => {
+    const thread = await getAdminThreadMessages(threadId);
+    if (thread) {
+      setChatHistoryThread(thread);
+      setShowChatHistoryModal(true);
+    } else {
+      alert("Failed to load chat history or thread does not exist.");
+    }
   };
 
   return (
@@ -270,29 +282,32 @@ export default function Admin() {
                 const isPending = report.status === 'Pending';
                 
                 return (
-                  <tr key={report.id} className="hover:bg-surface-container-lowest/50 transition-colors">
+                  <tr key={report._id} className="hover:bg-surface-container-lowest/50 transition-colors">
                     <td className="p-4 flex items-center gap-3">
                       <div className="w-10 h-10 rounded bg-surface-variant flex-shrink-0 overflow-hidden flex items-center justify-center text-outline">
                         {report.image ? (
-                          <img alt={report.name} className="w-full h-full object-cover" src={report.image}/>
+                          <img alt={report.listingTitle} className="w-full h-full object-cover" src={report.image}/>
                         ) : (
                           <span className="material-symbols-outlined">person</span>
                         )}
                       </div>
                       <div>
-                        <p className="font-semibold text-on-surface line-clamp-1">{report.name}</p>
-                        <p className="text-label-sm text-outline">ID: #{report.id}</p>
+                        <p className="font-semibold text-on-surface line-clamp-1">{report.listingTitle}</p>
+                        <p className="text-label-sm text-outline">ID: #{report.listingId}</p>
                       </div>
                     </td>
                     <td className="p-4">
                       <div className="flex items-center gap-2">
                         <div className="w-6 h-6 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center font-bold text-xs">
-                          {report.reporter[0].toUpperCase()}
+                          {report.reporterEmail[0].toUpperCase()}
                         </div>
-                        <span>{report.reporter}</span>
+                        <span>{report.reporterEmail}</span>
                       </div>
                     </td>
-                    <td className="p-4 text-on-surface-variant">{report.reason}</td>
+                    <td className="p-4 text-on-surface-variant">
+                      <p className="font-semibold">{report.reason}</p>
+                      {report.description && <p className="text-xs text-outline line-clamp-2 mt-1">{report.description}</p>}
+                    </td>
                     <td className="p-4">
                       <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold ${
                         isPending 
@@ -308,15 +323,23 @@ export default function Admin() {
                     <td className="p-4 text-right">
                       {isPending ? (
                         <div className="flex justify-end gap-2">
+                          <Link 
+                            to={`/product/${report.listingId}`}
+                            className="p-2 rounded-lg text-primary border-0 bg-transparent hover:bg-primary-container/20 transition-all cursor-pointer active:scale-90 flex items-center justify-center" 
+                            title="View Reported Listing"
+                            target="_blank"
+                          >
+                            <span className="material-symbols-outlined text-[20px] font-bold">visibility</span>
+                          </Link>
                           <button 
-                            onClick={() => handleApproveReport(report.id)}
+                            onClick={() => handleApproveReport(report._id)}
                             className="p-2 rounded-lg text-secondary border-0 bg-transparent hover:bg-secondary-container/20 transition-all cursor-pointer active:scale-90" 
                             title="Approve Report (Remove Listing)"
                           >
                             <span className="material-symbols-outlined text-[20px] font-bold">check</span>
                           </button>
                           <button 
-                            onClick={() => handleDismissReport(report.id)}
+                            onClick={() => handleDismissReport(report._id)}
                             className="p-2 rounded-lg text-outline border-0 bg-transparent hover:bg-surface-container-high transition-all cursor-pointer active:scale-90" 
                             title="Reject Report (Keep Listing)"
                           >
@@ -325,7 +348,7 @@ export default function Admin() {
                         </div>
                       ) : (
                         <button 
-                          onClick={() => alert(`Reviewing archived case history for ${report.id}`)}
+                          onClick={() => alert(`Reviewing archived case history for ${report._id}`)}
                           className="text-primary hover:text-primary-fixed-dim font-label-md text-label-md transition-colors underline decoration-transparent hover:decoration-primary cursor-pointer border-0 bg-transparent"
                         >
                           View Case
@@ -394,6 +417,141 @@ export default function Admin() {
           </table>
         </div>
       </div>
+
+    {/* Flagged Conversations Table */}
+      <div className="mt-xl glass-card rounded-xl overflow-hidden shadow-sm mb-xl">
+        <div className="p-6 border-b border-outline-variant/30 flex justify-between items-center bg-surface-container-lowest/50">
+          <h3 className="font-headline-md text-headline-md font-semibold text-on-surface font-bold">Flagged Conversations</h3>
+          <span className="text-outline text-label-sm font-semibold">{chatReports.filter(r => r.status === 'Pending').length} Pending Cases</span>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="bg-surface-container-low text-on-surface-variant font-label-md text-label-md uppercase tracking-wider">
+                <th className="p-4 font-bold">Reported By</th>
+                <th className="p-4 font-bold">Reported User</th>
+                <th className="p-4 font-bold">Reason</th>
+                <th className="p-4 font-bold">Status</th>
+                <th className="p-4 font-bold text-right">Action</th>
+              </tr>
+            </thead>
+            <tbody className="font-body-md text-body-md text-on-surface divide-y divide-outline-variant/20">
+              {chatReports.map((report) => {
+                const isPending = report.status === 'Pending';
+                
+                return (
+                  <tr key={report._id} className="hover:bg-surface-container-lowest/50 transition-colors">
+                    <td className="p-4">
+                      <p className="font-semibold">{report.reporterEmail}</p>
+                    </td>
+                    <td className="p-4 text-error font-semibold">
+                      {report.reportedUserEmail}
+                    </td>
+                    <td className="p-4 text-on-surface-variant">
+                      <p className="font-semibold">{report.reason}</p>
+                    </td>
+                    <td className="p-4">
+                      <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold ${
+                        isPending 
+                          ? 'bg-error-container/30 text-error' 
+                          : 'bg-surface-variant text-on-surface-variant'
+                      }`}>
+                        {isPending && <span className="w-1.5 h-1.5 rounded-full bg-error"></span>}
+                        {report.status}
+                      </span>
+                    </td>
+                    <td className="p-4 text-right">
+                      {isPending ? (
+                        <div className="flex justify-end gap-2">
+                          <button 
+                            onClick={() => handleViewChatHistory(report.threadId)}
+                            className="p-2 rounded-lg text-primary border-0 bg-transparent hover:bg-primary-container/20 transition-all cursor-pointer active:scale-90 flex items-center justify-center" 
+                            title="View Chat History"
+                          >
+                            <span className="material-symbols-outlined text-[20px] font-bold">chat</span>
+                          </button>
+                          <button 
+                            onClick={() => handleResolveChatReport(report._id)}
+                            className="p-2 rounded-lg text-secondary border-0 bg-transparent hover:bg-secondary-container/20 transition-all cursor-pointer active:scale-90" 
+                            title="Resolve Case (Warn User)"
+                          >
+                            <span className="material-symbols-outlined text-[20px] font-bold">gavel</span>
+                          </button>
+                          <button 
+                            onClick={() => handleDismissChatReport(report._id)}
+                            className="p-2 rounded-lg text-outline border-0 bg-transparent hover:bg-surface-container-high transition-all cursor-pointer active:scale-90" 
+                            title="Dismiss Report"
+                          >
+                            <span className="material-symbols-outlined text-[20px] font-bold">close</span>
+                          </button>
+                        </div>
+                      ) : (
+                        <button 
+                          onClick={() => handleViewChatHistory(report.threadId)}
+                          className="text-primary hover:text-primary-fixed-dim font-label-md text-label-md transition-colors underline decoration-transparent hover:decoration-primary cursor-pointer border-0 bg-transparent"
+                        >
+                          View Transcript
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Chat History Modal */}
+      {showChatHistoryModal && chatHistoryThread && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="bg-surface rounded-3xl overflow-hidden max-w-[600px] w-full shadow-lg border border-outline-variant/20 flex flex-col max-h-[80vh]">
+            <div className="p-6 border-b border-outline-variant/20 flex justify-between items-center bg-surface-container-lowest">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-error-container text-error flex items-center justify-center font-bold">
+                  <span className="material-symbols-outlined">forum</span>
+                </div>
+                <div>
+                  <h3 className="font-headline-sm text-headline-sm font-bold text-on-surface leading-tight">Chat Transcript</h3>
+                  <p className="text-label-sm text-outline">Thread ID: {chatHistoryThread.threadId}</p>
+                </div>
+              </div>
+              <button 
+                onClick={() => setShowChatHistoryModal(false)}
+                className="w-10 h-10 rounded-full bg-surface-container hover:bg-surface-container-high flex items-center justify-center border-0 cursor-pointer text-on-surface"
+              >
+                <span className="material-symbols-outlined">close</span>
+              </button>
+            </div>
+            
+            <div className="p-6 overflow-y-auto flex-grow bg-surface-container-lowest">
+              <div className="space-y-4">
+                {chatHistoryThread.messages.length === 0 ? (
+                  <p className="text-center text-outline">No messages in this thread.</p>
+                ) : (
+                  chatHistoryThread.messages.map((msg, i) => (
+                    <div key={i} className="bg-surface-container-low p-4 rounded-xl border border-outline-variant/30">
+                      <div className="flex justify-between items-baseline mb-2">
+                        <span className="font-bold text-on-surface text-label-md">{msg.sender}</span>
+                        <span className="text-label-sm text-outline">{msg.time}</span>
+                      </div>
+                      <p className="text-body-md text-on-surface whitespace-pre-wrap">{msg.text}</p>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+            <div className="p-4 bg-surface border-t border-outline-variant/20 flex justify-end">
+               <button 
+                onClick={() => setShowChatHistoryModal(false)}
+                className="px-6 py-2.5 rounded-full font-label-lg font-bold text-on-surface bg-surface-container hover:bg-surface-container-high transition-colors cursor-pointer border-none"
+              >
+                Close Transcript
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );
