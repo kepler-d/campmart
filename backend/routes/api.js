@@ -3,7 +3,7 @@ const router = express.Router();
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const nodemailer = require('nodemailer');
-const { getDb, Listing, Profile, MessageThread, Favorite, AllowedDomain, CampusRequest, Notification, Report, ChatReport } = require('../db');
+const { getDb, Listing, Profile, MessageThread, Favorite, AllowedDomain, CampusRequest, Notification, Report, ChatReport, ActivityLog } = require('../db');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'supersecret_campus_key';
 
@@ -598,6 +598,70 @@ router.delete('/profile', async (req, res) => {
   }
 });
 
+// --- LEADERBOARD ---
+router.get('/leaderboard', async (req, res) => {
+  await getDb();
+  const { period } = req.query; // 'allTime' or 'thisMonth'
+
+  try {
+    if (period === 'thisMonth') {
+      // 1. Get start of current month
+      const startOfMonth = new Date();
+      startOfMonth.setDate(1);
+      startOfMonth.setHours(0, 0, 0, 0);
+
+      // 2. Aggregate activity logs for this month
+      const monthlyPoints = await ActivityLog.aggregate([
+        { $match: { timestamp: { $gte: startOfMonth } } },
+        { $group: { _id: "$userEmail", totalPointsThisMonth: { $sum: "$pointsEarned" } } },
+        { $sort: { totalPointsThisMonth: -1 } },
+        { $limit: 10 }
+      ]);
+
+      // 3. Fetch profile details for these users
+      const emails = monthlyPoints.map(p => p._id);
+      const profiles = await Profile.find({ email: { $in: emails } }).lean();
+      
+      const leaderboardData = monthlyPoints.map((mp, index) => {
+        const prof = profiles.find(p => p.email === mp._id) || {};
+        return {
+          rank: index + 1,
+          email: mp._id,
+          name: prof.name || 'Unknown',
+          avatar: prof.avatar || '',
+          points: mp.totalPointsThisMonth,
+          rating: prof.rating || 5.0,
+          salesCount: prof.salesCount || 0,
+          label: prof.salesCount > 10 ? 'Power Seller' : 'Rising Star'
+        };
+      });
+
+      return res.json(leaderboardData);
+
+    } else {
+      // All Time: Just sort by total points on Profile
+      const topUsers = await Profile.find()
+        .sort({ points: -1 })
+        .limit(10)
+        .lean();
+
+      const leaderboardData = topUsers.map((prof, index) => ({
+        rank: index + 1,
+        email: prof.email,
+        name: prof.name,
+        avatar: prof.avatar,
+        points: prof.points || 0,
+        rating: prof.rating || 5.0,
+        salesCount: prof.salesCount || 0,
+        label: prof.salesCount > 10 ? 'Power Seller' : 'Rising Star'
+      }));
+
+      return res.json(leaderboardData);
+    }
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 // --- MESSAGES ---
 router.get('/messages', async (req, res) => {
   await getDb();

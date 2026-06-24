@@ -99,6 +99,13 @@ const chatReportSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now }
 });
 
+const activityLogSchema = new mongoose.Schema({
+  userEmail: { type: String, required: true },
+  action: { type: String, required: true },
+  pointsEarned: { type: Number, required: true },
+  timestamp: { type: Date, default: Date.now }
+});
+
 // --- Models ---
 const Listing = mongoose.model('Listing', listingSchema);
 const Profile = mongoose.model('Profile', profileSchema);
@@ -109,6 +116,7 @@ const CampusRequest = mongoose.model('CampusRequest', campusRequestSchema);
 const Notification = mongoose.model('Notification', notificationSchema);
 const Report = mongoose.model('Report', reportSchema);
 const ChatReport = mongoose.model('ChatReport', chatReportSchema);
+const ActivityLog = mongoose.model('ActivityLog', activityLogSchema);
 
 // --- Defaults ---
 const DEFAULT_LISTINGS = [
@@ -307,5 +315,6 @@ module.exports = {
   CampusRequest,
   Notification,
   Report,
-  ChatReport
+  ChatReport,
+  ActivityLog
 };
