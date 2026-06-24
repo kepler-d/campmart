@@ -89,10 +89,14 @@ npm run dev
 
 ## 🔮 Roadmap / Future Enhancements
 
-- **🔐 User Verification**: Require university email verification (`.edu`) to restrict access to authenticated college students.
 - **💳 Payment Gateway**: Secure in-app payments using Stripe or cash-on-delivery escrow verification.
-- **🔔 Interactive Notifications**: Add push notifications and email alerts for messages and listing offers.
-- **🔑 JWT Authentication**: Upgrade the demo login flow to use secure JWT tokens and encrypted passwords.
+- **🤖 AI-Powered Listing Generation**: Auto-categorize items and suggest pricing based on image recognition.
+- **📅 Integrated Meetup Scheduler**: Propose and agree upon safe, public meeting spots on campus with calendar sync.
+- **📱 Native Mobile App**: Develop iOS and Android applications for native features like camera access and push notifications.
+- **🔍 "In Search Of" (ISO) Board**: Allow students to post requests for items they need, letting sellers fulfill them directly.
+- **🌍 Multi-University Expansion**: Support multiple universities with distinct geofenced zones.
+- **⭐ Enhanced Trust & Safety**: Introduce automated seller badges (e.g., "Fast Responder") and automated moderation for listings.
+- **🌙 Personalization & Dark Mode**: Add robust dark mode support and personalized feeds based on a student's major.
 
 ---
 
