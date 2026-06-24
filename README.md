@@ -8,6 +8,8 @@ A modern, responsive, and gamified peer-to-peer marketplace platform built for u
 
 - **🛍️ Dynamic Marketplace**: Browse listings with search filters by category, price, condition, and transaction type.
 - **💬 Real-Time Direct Messaging**: Instant threaded messaging between buyers and sellers powered by Socket.io, displaying context-aware item info directly in the chat panel.
+- **🔐 Secure User Authentication**: Restricts access to authenticated college students using robust university email verification (`.edu`) and secure JWT tokens.
+- **🔔 Interactive Notifications**: Stay updated with push notifications and email alerts for new messages and listing offers.
 - **📊 Analytics Dashboard**: Track active listings, purchase history, total sales, current earnings, and platform points.
 - **📈 Gamified Leaderboards**: Earn points and level up by selling items, renting out equipment, and promoting sustainable campus recycling.
 - **📦 Effortless Listing Creation**: List new products for sale or rent with categories, rental intervals, descriptions, conditions, and images.
