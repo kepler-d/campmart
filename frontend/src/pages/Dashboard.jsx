@@ -413,7 +413,18 @@ export default function Dashboard() {
       </section>
 
       {/* Stats Bento Grid */}
-      <section className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <section className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+        
+        <div className="bg-surface-container-lowest border border-outline-variant/30 rounded-xl p-4 flex items-center gap-4 hover:shadow-md transition-shadow">
+          <div className="p-3 bg-tertiary/10 text-tertiary rounded-xl shrink-0">
+            <span className="material-symbols-outlined text-[28px] icon-fill">stars</span>
+          </div>
+          <div>
+            <p className="text-[12px] font-bold text-on-surface-variant uppercase tracking-wider">Total Points</p>
+            <h3 className="text-2xl font-black text-on-surface mt-0.5">{profile.points || 0}</h3>
+          </div>
+        </div>
+
         <div className="bg-surface-container-lowest border border-outline-variant/30 rounded-xl p-4 flex items-center gap-4 hover:shadow-md transition-shadow">
           <div className="p-3 bg-primary/10 text-primary rounded-xl shrink-0">
             <span className="material-symbols-outlined text-[28px] icon-fill">storefront</span>
