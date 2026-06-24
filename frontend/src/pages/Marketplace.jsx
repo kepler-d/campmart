@@ -381,7 +381,7 @@ export default function Marketplace() {
                         </span>
                         {mode === 'buy' && item.rentPrice && (
                           <span className="font-label-sm text-[11px] text-outline-variant mt-1">
-                            or ₹{item.rentPrice}/month rent
+                            or ₹{item.rentPrice}/{item.rentInterval || 'month'} rent
                           </span>
                         )}
                         {mode === 'rent' && item.isRentOnly && (

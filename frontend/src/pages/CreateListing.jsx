@@ -22,6 +22,7 @@ export default function CreateListing() {
   const [desc, setDesc] = useState('');
   const [price, setPrice] = useState('120.00');
   const [rentPrice, setRentPrice] = useState('');
+  const [rentInterval, setRentInterval] = useState('month');
   const [rentOnly, setRentOnly] = useState(false);
   const [imageUrls, setImageUrls] = useState([RANDOM_IMAGES[0]]);
   const [newImageUrl, setNewImageUrl] = useState('');
@@ -72,7 +73,7 @@ export default function CreateListing() {
       price: rentOnly ? 0 : (isNaN(buyPrice) ? 0 : buyPrice),
       rentPrice: isNaN(rentalPrice) ? undefined : rentalPrice,
       isRentOnly: rentOnly || undefined,
-      rentInterval: rentOnly ? 'mo' : undefined,
+      rentInterval: (rentOnly || !isNaN(rentalPrice)) ? rentInterval : undefined,
       condition: condition,
       rating: 0.0,
       image: imageUrls.length > 0 ? imageUrls[0] : '',
@@ -114,11 +115,11 @@ export default function CreateListing() {
 
   // Calculate pricing elements for preview card
   const priceDisplay = rentOnly
-    ? `₹${(parseFloat(rentPrice) || 0).toFixed(2)}`
+    ? `₹${(parseFloat(rentPrice) || 0).toFixed(2)}/${rentInterval}`
     : `₹${(parseFloat(price) || 0).toFixed(2)}`;
 
   const secondaryPriceText = (!rentOnly && rentPrice)
-    ? `or ₹${parseFloat(rentPrice).toFixed(0)}/month rent`
+    ? `or ₹${parseFloat(rentPrice).toFixed(0)}/${rentInterval} rent`
     : '';
 
   return (
@@ -341,16 +342,32 @@ export default function CreateListing() {
                       />
                     </div>
                     <div>
-                      <label className="block font-label-md text-label-md text-on-surface mb-xs font-semibold">Rent Price (₹/month, optional)</label>
-                      <input 
-                        type="number" 
-                        min="0" 
-                        step="0.01" 
-                        value={rentPrice}
-                        onChange={(e) => setRentPrice(e.target.value)}
-                        className="w-full rounded-lg border border-outline-variant bg-surface-container-lowest px-md py-3 text-body-md font-body-md outline-none focus:border-primary" 
-                        placeholder="0.00" 
-                      />
+                      <label className="block font-label-md text-label-md text-on-surface mb-xs font-semibold">Rent Price (optional)</label>
+                      <div className="flex gap-2">
+                        <input 
+                          type="number" 
+                          min="0" 
+                          step="0.01" 
+                          value={rentPrice}
+                          onChange={(e) => setRentPrice(e.target.value)}
+                          className="w-2/3 rounded-lg border border-outline-variant bg-surface-container-lowest px-md py-3 text-body-md font-body-md outline-none focus:border-primary" 
+                          placeholder="0.00" 
+                        />
+                        <div className="relative w-1/3">
+                          <select 
+                            value={rentInterval}
+                            onChange={(e) => setRentInterval(e.target.value)}
+                            className="w-full h-full rounded-lg border border-outline-variant bg-surface-container-lowest px-2 py-3 text-body-md font-body-md appearance-none outline-none cursor-pointer focus:border-primary"
+                          >
+                            <option value="day">/ day</option>
+                            <option value="week">/ week</option>
+                            <option value="month">/ month</option>
+                            <option value="semester">/ sem</option>
+                            <option value="year">/ year</option>
+                          </select>
+                          <span className="material-symbols-outlined absolute right-2 top-1/2 -translate-y-1/2 text-outline pointer-events-none text-sm">expand_more</span>
+                        </div>
+                      </div>
                     </div>
                   </div>
                   <label className="flex items-center gap-md p-2 rounded-md hover:bg-surface-container-low cursor-pointer transition-colors mt-xs">

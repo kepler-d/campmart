@@ -117,7 +117,7 @@ export default function ProductDetails() {
       {
         title: product.title,
         price: product.isRentOnly 
-          ? `₹${(product.rentPrice || 0).toFixed(2)}/mo`
+          ? `₹${(product.rentPrice || 0).toFixed(2)}/${product.rentInterval || 'mo'}`
           : `₹${product.price.toFixed(2)}`,
         image: product.image
       },
@@ -156,7 +156,7 @@ export default function ProductDetails() {
       sellerEmail,
       {
         title: product.title,
-        price: `₹${(product.rentPrice || 0).toFixed(2)}/mo`,
+        price: `₹${(product.rentPrice || 0).toFixed(2)}/${product.rentInterval || 'mo'}`,
         image: product.image
       },
       product.seller,
@@ -189,7 +189,7 @@ export default function ProductDetails() {
       {
         title: product.title,
         price: product.isRentOnly 
-          ? `₹${(product.rentPrice || 0).toFixed(2)}/mo`
+          ? `₹${(product.rentPrice || 0).toFixed(2)}/${product.rentInterval || 'mo'}`
           : `₹${product.price.toFixed(2)}`,
         image: product.image
       },
@@ -322,11 +322,11 @@ export default function ProductDetails() {
             
             <p className="font-display text-[32px] text-primary font-black mb-4 leading-none">
               {product.isRentOnly 
-                ? `₹${(product.rentPrice || 0).toFixed(2)}/mo` 
+                ? `₹${(product.rentPrice || 0).toFixed(2)}/${product.rentInterval || 'mo'}` 
                 : `₹${product.price.toFixed(2)}`}
               {product.rentPrice && !product.isRentOnly && (
                 <span className="font-body-md text-body-md text-outline font-normal ml-3">
-                  (or ₹{product.rentPrice}/mo rent)
+                  (or ₹{product.rentPrice}/${product.rentInterval || 'mo'} rent)
                 </span>
               )}
             </p>
