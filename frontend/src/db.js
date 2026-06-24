@@ -473,3 +473,29 @@ export async function getAdminThreadMessages(threadId) {
     return null;
   }
 }
+
+export async function getPendingRatings(email) {
+  try {
+    const res = await fetch(`${API_URL}/profile/pending-ratings?email=${encodeURIComponent(email)}`);
+    if (!res.ok) throw new Error('Failed to fetch pending ratings');
+    return await res.json();
+  } catch (err) {
+    console.error('Error fetching pending ratings:', err);
+    return [];
+  }
+}
+
+export async function submitSellerRating(listingId, sellerEmail, rating) {
+  try {
+    const res = await fetch(`${API_URL}/profile/rate-seller`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ listingId, sellerEmail, rating })
+    });
+    if (!res.ok) throw new Error('Failed to submit rating');
+    return await res.json();
+  } catch (err) {
+    console.error('Error submitting seller rating:', err);
+    throw err;
+  }
+}

@@ -19,7 +19,8 @@ const listingSchema = new mongoose.Schema({
   status: { type: String, default: 'available' }, // 'available', 'rented', 'sold'
   buyerEmail: String,
   rentedByEmail: String,
-  rentedUntil: Date
+  rentedUntil: Date,
+  buyerRated: { type: Boolean, default: false }
 }, { strict: false }); // Allow dynamic fields if needed
 
 const profileSchema = new mongoose.Schema({
@@ -32,6 +33,7 @@ const profileSchema = new mongoose.Schema({
   year: String,
   avatar: String,
   rating: Number,
+  ratingCount: { type: Number, default: 0 },
   rank: Number,
   points: Number,
   listingsCount: Number,

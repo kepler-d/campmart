@@ -265,6 +265,25 @@ router.post('/listings', async (req, res) => {
   }
 });
 
+router.get('/listings/history', async (req, res) => {
+  await getDb();
+  try {
+    const { email } = req.query;
+    if (!email) return res.status(400).json({ error: 'Email required' });
+    
+    const historyListings = await Listing.find({
+      $or: [
+        { buyerEmail: email },
+        { rentedByEmail: email }
+      ]
+    }).lean();
+    
+    res.json(historyListings);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 router.get('/listings/:id', async (req, res) => {
   await getDb();
   try {
@@ -305,24 +324,7 @@ router.delete('/listings/:id', async (req, res) => {
   }
 });
 
-router.get('/listings/history', async (req, res) => {
-  await getDb();
-  try {
-    const { email } = req.query;
-    if (!email) return res.status(400).json({ error: 'Email required' });
-    
-    const historyListings = await Listing.find({
-      $or: [
-        { buyerEmail: email },
-        { rentedByEmail: email }
-      ]
-    }).lean();
-    
-    res.json(historyListings);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
+
 
 router.post('/listings/:id/transaction', async (req, res) => {
   await getDb();
@@ -431,7 +433,67 @@ router.post('/listings/:id/cancel-reservation', async (req, res) => {
   }
 });
 
-// --- PROFILE ---
+// --- PROFILE & RATINGS ---
+router.get('/profile/pending-ratings', async (req, res) => {
+  await getDb();
+  const { email } = req.query;
+  if (!email) return res.status(400).json({ error: 'Email required' });
+
+  try {
+    const pending = await Listing.find({
+      $or: [{ buyerEmail: email }, { rentedByEmail: email }],
+      status: { $in: ['sold', 'rented'] },
+      buyerRated: { $ne: true }
+    }).lean();
+
+    // Map to include seller email if not directly available
+    // In our current schema, sellerEmail isn't explicitly on Listing, but we use `seller` (name) or `sellerEmail`.
+    // Let's resolve sellerEmail for each if needed.
+    const enrichedPending = await Promise.all(pending.map(async (item) => {
+      let sellerEmail = item.sellerEmail;
+      if (!sellerEmail) {
+        const profile = await Profile.findOne({ name: item.seller }).lean();
+        if (profile) sellerEmail = profile.email;
+      }
+      return { ...item, resolvedSellerEmail: sellerEmail || 'unknown' };
+    }));
+
+    res.json(enrichedPending);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.post('/profile/rate-seller', async (req, res) => {
+  await getDb();
+  const { listingId, sellerEmail, rating } = req.body;
+  if (!listingId || !sellerEmail || !rating) return res.status(400).json({ error: 'Missing required fields' });
+
+  try {
+    // 1. Mark listing as rated
+    await Listing.updateOne({ id: listingId }, { buyerRated: true });
+
+    // 2. Update seller profile
+    const sellerProfile = await Profile.findOne({ email: sellerEmail });
+    if (sellerProfile) {
+      const currentRating = sellerProfile.rating || 5;
+      const count = sellerProfile.ratingCount || 1; // Start at 1 to account for default 5 rating
+
+      const newRating = ((currentRating * count) + rating) / (count + 1);
+      sellerProfile.rating = parseFloat(newRating.toFixed(1));
+      sellerProfile.ratingCount = count + 1;
+      await sellerProfile.save();
+      delete cache.profile[sellerEmail];
+    }
+    
+    // Invalidate listings cache
+    cache.listings = {};
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 router.get('/profile', async (req, res) => {
   await getDb();
   const { email } = req.query;
