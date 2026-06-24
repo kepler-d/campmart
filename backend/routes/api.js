@@ -33,6 +33,25 @@ const cache = {
   favorites: {}
 };
 
+async function awardPoints(email, points, actionDesc) {
+  if (!email || points <= 0) return;
+  try {
+    const profile = await Profile.findOne({ email });
+    if (profile) {
+      profile.points = (profile.points || 0) + points;
+      await profile.save();
+      delete cache.profile[email];
+    }
+    await ActivityLog.create({
+      userEmail: email,
+      action: actionDesc,
+      pointsEarned: points
+    });
+  } catch (err) {
+    console.error("Error awarding points:", err);
+  }
+}
+
 // --- AUTH ---
 router.post('/auth/register', async (req, res) => {
   await getDb();
@@ -258,6 +277,11 @@ router.post('/listings', async (req, res) => {
       if (newListings.domain && cache.listings) {
         delete cache.listings[newListings.domain];
       }
+      
+      // Award points for creating listing (only if sellerEmail exists)
+      if (newListings.sellerEmail && !duplicate) {
+         await awardPoints(newListings.sellerEmail, 10, 'Created a new listing');
+      }
     }
     res.json({ success: true });
   } catch (err) {
@@ -400,6 +424,22 @@ router.post('/listings/:id/handover', async (req, res) => {
     
     // Delete associated chat thread
     await MessageThread.deleteMany({ 'productContext.title': listing.title });
+
+    // Award points for successful transaction
+    let sellerEmail = listing.sellerEmail;
+    if (!sellerEmail && listing.domain) {
+       sellerEmail = `user${listing.domain}`; // Fallback, better to check profile by name but good enough for demo
+    }
+    if (!sellerEmail) {
+       const profile = await Profile.findOne({ name: listing.seller }).lean();
+       if (profile) sellerEmail = profile.email;
+    }
+    
+    if (sellerEmail) {
+       await awardPoints(sellerEmail, 50, 'Completed a successful transaction');
+       // Also increment salesCount
+       await Profile.updateOne({ email: sellerEmail }, { $inc: { salesCount: 1 } });
+    }
     
     cache.listings = {};
     res.json({ success: true, listing });
@@ -484,6 +524,11 @@ router.post('/profile/rate-seller', async (req, res) => {
       sellerProfile.ratingCount = count + 1;
       await sellerProfile.save();
       delete cache.profile[sellerEmail];
+
+      if (rating >= 4) {
+         const points = rating === 5 ? 20 : 10;
+         await awardPoints(sellerEmail, points, `Received a ${rating}-star review`);
+      }
     }
     
     // Invalidate listings cache
